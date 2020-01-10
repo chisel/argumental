@@ -4,9 +4,10 @@ declare namespace Argumental {
   * Action handler.
   * @param args Parsed arguments for the command.
   * @param opts Parsed options for the command.
+  * @param cmd The name of the invoked command.
   */
-  type ActionHandler = (args: { [arg: string]: string|number|boolean }, opts: { [opt: string]: string|number|boolean }) => void|Promise<void>;
-  
+  type ActionHandler = (args: { [arg: string]: string|number|boolean }, opts: { [opt: string]: string|number|boolean }, cmd: string) => void|Promise<void>;
+
   /**
   * Argument or option validator.
   * If validation fails, this method should throw an error with a message.
