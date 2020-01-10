@@ -5,7 +5,7 @@ Argumental is a framework for building CLI applications using Node.js, which ena
 # Installation
 
 ```bash
-npm install argumental -g
+npm install argumental
 ```
 
 # Quick Start
