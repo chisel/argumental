@@ -186,6 +186,14 @@ Run the unit tests built with Mocha and Chai:
 npm test
 ```
 
+# Developer Documentation
+
+Generate the developer documentation at `/docs` by running:
+
+```bash
+npm run docs
+```
+
 # Building The Source
 
 Run the following commands to build and install from source code:
