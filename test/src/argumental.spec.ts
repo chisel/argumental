@@ -15,7 +15,7 @@ describe('App', function() {
     .version('1.0.0')
     .global
     .argument('[global_argument]', 'A global argument')
-    .option('-l --log [level]', 'Enables logging', false, /^verbose$|^info$|^warn$|^error$/i, 'info')
+    .option('-l --log [level]', 'Enables logging', false, /^verbose$|^info$|^warn$|^error$/i, true, 'info')
     .action(() => {
 
       lastActionFlag.push('global_first');
@@ -89,6 +89,7 @@ describe('App', function() {
         apiName: 'log',
         description: 'Enables logging',
         required: false,
+        multi: true,
         argument: {
           name: 'level',
           apiName: 'level',
@@ -103,6 +104,7 @@ describe('App', function() {
         apiName: 'overrideName',
         description: 'Overrides the script name',
         required: false,
+        multi: false,
         argument: {
           name: 'script_name',
           apiName: 'scriptName',
@@ -117,6 +119,7 @@ describe('App', function() {
         apiName: 'overwrite',
         description: 'Overwrites any scripts with the same type and name',
         required: true,
+        multi: false,
         argument: null
       },
       {
@@ -125,6 +128,7 @@ describe('App', function() {
         apiName: 'clean',
         description: 'Cleans the scripts directory (if force is true, kills any script processes before cleaning)',
         required: false,
+        multi: false,
         argument: {
           name: 'force',
           apiName: 'force',

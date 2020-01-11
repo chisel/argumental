@@ -49,7 +49,7 @@ app
 Argumental provides a [chainable API](#chaining-and-context) to define the whole application in one go. Once imported, the following methods are available on the app object and all methods (except `parse()`) return a reference to the parent object for chaining:
 
   - **command(___name___, ___description___)**: Defines a command.
-    - ___name___: The command name. Can only contain alphanumeric characters and spaces.
+    - ___name___: The command name. Can only contain alphanumeric characters and nonconsecutive spaces.
     - ___description___: `Optional` A description to display in application help.
   - **alias(___name___)**: Defines an alias for the current command.
     - ___name___: The command alias name. Can only contain alphanumeric characters and spaces.
@@ -58,16 +58,17 @@ Argumental provides a [chainable API](#chaining-and-context) to define the whole
     - ___description___: `Optional` A description to display in application help.
     - ___validators___: `Optional` A single or an array of [validators](#validation) to validate the argument value.
     - ___defaultValue___: `Optional` The default value of the argument if value was not provided (only works with optional arguments).
-  - **option(___syntax___, ___description___, ___required___, ___validators___, ___defaultValue___)**: Defines an option for the current command.
+  - **option(___syntax___, ___description___, ___required___, ___validators___, ___multi___, ___defaultValue___)**: Defines an option for the current command.
     - ___syntax___: The option syntax. You can define a one letter shorthand (e.g. `-p`), an option name (e.g. `--port-number`), and one argument (e.g. `<port_number>`) in the syntax (e.g. `-p --port-number <port_number>`). Option name can only contain alphanumeric characters and `-`s.
     - ___description___: `Optional` A description to display in application help.
     - ___required___: `Optional` Indicates whether this option is required for the command.
     - ___validators___: `Optional` A single or an array of [validators](#validation) to validate the option's argument value (only applies to options with an argument).
+    - ___multi___: `Optional` Indicates whether this option can be repeated more than once (only practical for options with argument).
     - ___defaultValue___: `Optional` The default value of the argument if value was not provided (only applies to options with an optional argument, e.g. `--option [argument]`).  
   - **action(___handler___)**: Defines an action for the current command.
     - ___handler___: An action handler function which takes the following parameters:
       - **args**: A key-value pair object containing the passed-in arguments (uses camel-cased argument names as keys).
-      - **opts**: A key-value pair object containing the passed-in options (uses the shorthand and camel-cased option names as keys). If option definition didn't contain an argument, values would be booleans instead.
+      - **opts**: A key-value pair object containing the passed-in options (uses the shorthand and camel-cased option names as keys). If option definition didn't contain an argument, values would be booleans instead. If option defined argument and can occur multiple times, the value would be an array containing each occurrence's value.
       - **cmd**: The invoked command's name.
   - **version(___version___)**: Sets the application version.
     - ___version___: The version of the application.

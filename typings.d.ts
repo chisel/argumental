@@ -47,6 +47,7 @@ declare namespace Argumental {
     description: string;
     required: boolean;
     argument: ArgumentDeclaration;
+    multi: boolean;
 
   }
 
@@ -69,6 +70,27 @@ declare namespace Argumental {
   interface List<T> {
 
     [key: string]: T;
+
+  }
+
+  interface ParsedArguments {
+
+    cmd: string;
+    /** NOTE: Missing arguments would be null. */
+    args: List<string>;
+    /** NOTE: For options with argument, missing options would be undefined,
+    options with missing argument value would be null, and string otherwise.
+    * For options without argument, missing options would be false, and true otherwise.
+    */
+    opts: List<boolean|string|Array<string>>;
+
+  }
+
+  interface ParsingError {
+
+    error: true;
+    code: string;
+    minimistParsed: any;
 
   }
 

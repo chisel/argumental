@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import path from 'path';
 import { Parser } from './parser';
 
 export class ArgumentalApp {
@@ -15,8 +16,12 @@ export class ArgumentalApp {
   private _commands: Argumental.List<Argumental.CommandDeclaration> = {};
   /** Current command declaration. */
   private _currentCommand: string = null;
+  /** List of all command names and aliases for quick conflict checks. */
+  private _conflicts: string[] = [];
   /** Application version. */
   private _version: string = null;
+  /** Application name. */
+  private _name: string = null;
   /** Utilities. */
   private _parser = new Parser();
 
@@ -56,9 +61,13 @@ export class ArgumentalApp {
     if ( this._commands.hasOwnProperty(name.trim()) )
       throw new Error(`ARGUMENTAL_ERROR: Command ${name.trim()} is already defined!`);
 
+    // Check if command name conflicts
+    if ( this._conflicts.includes(name.trim()) )
+      throw new Error(`ARGUMENTAL_ERROR: Cannot define command ${name.trim()} because it conflicts with a command or alias of the same name!`);
+
     // Check if command contains invalid characters
-    if ( ! name.trim().match(/^[a-z0-9 ]+$/i) )
-      throw new Error(`ARGUMENTAL_ERROR: Invalid command name ${name.trim()}! Commands can only contain alphanumeric characters and spaces.`);
+    if ( ! name.trim().match(/^[a-z0-9 ]+$/i) || name.trim().match(/ {2,}/) )
+      throw new Error(`ARGUMENTAL_ERROR: Invalid command name ${name.trim()}! Commands can only contain alphanumeric characters and nonconsecutive spaces.`);
 
     // Reset the global flag
     this._global = false;
@@ -75,6 +84,9 @@ export class ArgumentalApp {
       actions: _.cloneDeep(this._globalDeclaration.actions)
     };
 
+    // Register in conflicting names
+    this._conflicts.push(name.trim());
+
     return this;
 
   }
@@ -89,9 +101,9 @@ export class ArgumentalApp {
     if ( this._global )
       throw new Error('ARGUMENTAL_ERROR: Cannot define alias globally!');
 
-    // Check if a command exists with the given alias name
-    if ( this._commands.hasOwnProperty(name.trim()) )
-      throw new Error(`ARGUMENTAL_ERROR: Cannot define alias ${name.trim()} because it conflicts with a command of the same name!`);
+    // Check if alias name conflicts
+    if ( this._conflicts.includes(name.trim()) )
+      throw new Error(`ARGUMENTAL_ERROR: Cannot define alias ${name.trim()} because it conflicts with a command or alias of the same name!`);
 
     // Check if alias contains invalid characters
     if ( ! name.trim().match(/^[a-z0-9 ]+$/i) )
@@ -105,6 +117,9 @@ export class ArgumentalApp {
     const command = this._commands[this._currentCommand];
 
     if ( ! command.aliases.includes(name.trim()) ) command.aliases.push(name.trim());
+
+    // Register in conflicting names
+    this._conflicts.push(name.trim());
 
     return this;
 
@@ -201,21 +216,23 @@ export class ArgumentalApp {
   * @param description The option description to display in help.
   * @param required A boolean indicating if option is required.
   * @param validators A single or an array of validators.
+  * @param multi A boolean indicating whether this option can be repeated more than once (only practical for options with argument).
   * @param defaultValue A default value to use for the option's argument (when argument is optional).
   */
   public option(syntax: string): ArgumentalApp;
   public option(syntax: string, description: string): ArgumentalApp;
   public option(syntax: string, description: string, required: boolean): ArgumentalApp;
   public option(syntax: string, description: string, required: boolean, validators: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>): ArgumentalApp;
-  public option(syntax: string, description: string, required: boolean, validators: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, defaultValue: string|number|boolean): ArgumentalApp;
-  public option(syntax: string, description?: string, required?: boolean, validators?: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, defaultValue?: string|number|boolean): ArgumentalApp {
+  public option(syntax: string, description: string, required: boolean, validators: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, multi: boolean): ArgumentalApp;
+  public option(syntax: string, description: string, required: boolean, validators: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, multi: boolean, defaultValue: string|number|boolean): ArgumentalApp;
+  public option(syntax: string, description?: string, required?: boolean, validators?: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, multi?: boolean, defaultValue?: string|number|boolean): ArgumentalApp {
 
     // Check if no command is being declared and global flag is not set
     if ( this._currentCommand === null && ! this._global )
       throw new Error(`ARGUMENTAL_ERROR: Cannot define option ${syntax} because no command is being defined and global definition is disabled!`);
 
     // Parse option
-    const option = this._parser.parseOption(syntax, description, required, validators, defaultValue);
+    const option = this._parser.parseOption(syntax, description, required, validators, multi, defaultValue);
 
     // Check if option is already defined for current command or globally
     if (
@@ -244,6 +261,24 @@ export class ArgumentalApp {
     }
 
     return this;
+
+  }
+
+  /**
+  * Parses the process arguments (argv) and runs the app.
+  * @param argv Process arguments to parse.
+  */
+  public parse(argv: string[]): void {
+
+    // Extract app name
+    const appPath = argv.slice(1, 2)[0];
+
+    if ( appPath ) this._name = path.basename(appPath);
+
+    // Parse arguments
+    const parsed = this._parser.parseCliArguments(argv.slice(2), this._commands);
+
+    // Validate parsed arguments
 
   }
 

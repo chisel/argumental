@@ -124,6 +124,7 @@ describe('Parser', function() {
       apiName: 'port',
       description: 'desc',
       required: false,
+      multi: false,
       argument: {
         name: 'port_number',
         apiName: 'portNumber',
@@ -139,6 +140,7 @@ describe('Parser', function() {
       apiName: 'port',
       description: 'desc',
       required: false,
+      multi: false,
       argument: {
         name: 'port_number',
         apiName: 'portNumber',
@@ -154,6 +156,7 @@ describe('Parser', function() {
       apiName: 'port',
       description: 'desc',
       required: false,
+      multi: false,
       argument: null
     });
 
@@ -163,6 +166,7 @@ describe('Parser', function() {
       apiName: 'port',
       description: 'desc',
       required: false,
+      multi: false,
       argument: null
     });
 
@@ -172,6 +176,7 @@ describe('Parser', function() {
       apiName: 'portNumber',
       description: 'desc',
       required: false,
+      multi: false,
       argument: null
     });
 
@@ -181,6 +186,7 @@ describe('Parser', function() {
       apiName: null,
       description: 'desc',
       required: false,
+      multi: false,
       argument: {
         name: 'port_number',
         apiName: 'portNumber',
@@ -196,6 +202,7 @@ describe('Parser', function() {
       apiName: 'port',
       description: 'desc',
       required: false,
+      multi: false,
       argument: {
         name: 'port_number',
         apiName: 'portNumber',
@@ -211,6 +218,7 @@ describe('Parser', function() {
       apiName: 'port',
       description: 'desc',
       required: false,
+      multi: false,
       argument: null
     });
 
@@ -220,6 +228,7 @@ describe('Parser', function() {
       apiName: 'portP',
       description: 'desc',
       required: false,
+      multi: false,
       argument: null
     });
 
@@ -229,6 +238,7 @@ describe('Parser', function() {
       apiName: null,
       description: 'desc',
       required: false,
+      multi: false,
       argument: null
     });
 
@@ -417,6 +427,261 @@ describe('Parser', function() {
 
     expect(parsingError).not.to.be.null;
     expect(parsingError.message).to.equal(`ARGUMENTAL_ERROR: Option ---port has invalid syntax or contains invalid characters!`);
+
+  });
+
+  it('should parse cli arguments correctly', function() {
+
+    const commands: Argumental.List<Argumental.CommandDeclaration> = {
+      'new script': {
+        name: 'new script',
+        description: null,
+        aliases: ['ns'],
+        arguments: [
+          {
+            name: 'script_type',
+            apiName: 'scriptType',
+            required: true,
+            description: null,
+            validators: [],
+            default: undefined
+          },
+          {
+            name: 'script_name',
+            apiName: 'scriptName',
+            required: true,
+            description: null,
+            validators: [],
+            default: undefined
+          }
+        ],
+        options: [
+          {
+            shortName: null,
+            longName: 'skip-compilation',
+            apiName: 'skipCompilation',
+            required: false,
+            argument: null,
+            description: null,
+            multi: false
+          },
+          {
+            shortName: 'd',
+            longName: null,
+            apiName: null,
+            required: false,
+            argument: null,
+            description: null,
+            multi: false
+          },
+          {
+            shortName: 's',
+            longName: null,
+            apiName: null,
+            required: false,
+            argument: null,
+            description: null,
+            multi: false
+          },
+          {
+            shortName: 'c',
+            longName: 'copy-to',
+            apiName: 'copyTo',
+            required: true,
+            multi: false,
+            argument: {
+              name: 'destination',
+              apiName: 'destination',
+              required: true,
+              validators: [],
+              default: undefined
+            },
+            description: null
+          },
+          {
+            shortName: 'p',
+            longName: null,
+            apiName: null,
+            required: true,
+            multi: false,
+            argument: {
+              name: 'port_number',
+              apiName: 'portNumber',
+              required: true,
+              validators: [],
+              default: undefined
+            },
+            description: null
+          },
+          {
+            shortName: 'x',
+            longName: null,
+            apiName: null,
+            required: true,
+            multi: false,
+            argument: {
+              name: 'port_number',
+              apiName: 'portNumber',
+              required: true,
+              validators: [],
+              default: undefined
+            },
+            description: null
+          },
+          {
+            shortName: 'f',
+            longName: 'force',
+            apiName: 'force',
+            required: true,
+            multi: false,
+            argument: null,
+            description: null
+          },
+          {
+            shortName: 'a',
+            longName: 'abort',
+            apiName: 'abort',
+            required: true,
+            multi: false,
+            argument: {
+              name: 'code',
+              apiName: 'code',
+              required: true,
+              validators: [],
+              default: undefined
+            },
+            description: null
+          },
+          {
+            shortName: 'b',
+            longName: 'bail',
+            apiName: 'bail',
+            required: true,
+            multi: false,
+            argument: {
+              name: 'code',
+              apiName: 'code',
+              required: true,
+              validators: [],
+              default: undefined
+            },
+            description: null
+          }
+        ],
+        actions: []
+      }
+    };
+
+    let args = parser.parseCliArguments(['new', 'script', '--ext', '.ts', 'some-script.proc.ts', '-ds', '-sc', 'somewhere', '-c', 'here', '--copy-to', 'there', '-x', '-a', '2', '--bail', '0', '-b', '0'], commands);
+
+    expect(args).to.deep.equal({
+      cmd: 'new script',
+      args: {
+        scriptType: 'some-script.proc.ts',
+        scriptName: null
+      },
+      opts: {
+        skipCompilation: false,
+        d: true,
+        s: true,
+        c: ['somewhere', 'here', 'there'],
+        copyTo: ['somewhere', 'here', 'there'],
+        p: undefined,
+        x: null,
+        f: false,
+        force: false,
+        a: '2',
+        abort: '2',
+        b: ['0', '0'],
+        bail: ['0', '0']
+      }
+    });
+
+    args = parser.parseCliArguments(['ns', 'ts', '-a', '0', 'some-script.proc.ts', '-df', '-x', '""', '--abort', '1', '--abort', '-a', '"error code"'], commands);
+
+    expect(args).to.deep.equal({
+      cmd: 'new script',
+      args: {
+        scriptType: 'ts',
+        scriptName: 'some-script.proc.ts'
+      },
+      opts: {
+        skipCompilation: false,
+        d: true,
+        s: false,
+        c: undefined,
+        copyTo: undefined,
+        p: undefined,
+        x: '',
+        f: true,
+        force: true,
+        a: ['0', '1', null, 'error code'],
+        abort: ['0', '1', null, 'error code'],
+        b: undefined,
+        bail: undefined
+      }
+    });
+
+  });
+
+  it('should fail to parse invalid cli arguments', function() {
+
+    const commands: Argumental.List<Argumental.CommandDeclaration> = {
+      'new script': {
+        name: 'new script',
+        description: null,
+        aliases: ['ns'],
+        arguments: [
+          {
+            name: 'script_type',
+            apiName: 'scriptType',
+            required: true,
+            description: null,
+            validators: [],
+            default: undefined
+          },
+          {
+            name: 'script_name',
+            apiName: 'scriptName',
+            required: true,
+            description: null,
+            validators: [],
+            default: undefined
+          }
+        ],
+        options: [
+          {
+            shortName: null,
+            longName: 'skip-compilation',
+            apiName: 'skipCompilation',
+            required: false,
+            argument: null,
+            description: null,
+            multi: false
+          }
+        ],
+        actions: []
+      }
+    };
+
+    let args = parser.parseCliArguments(['s', 'ts'], commands);
+
+    expect(args).to.deep.equal({
+      error: true,
+      code: 'COMMAND_NOT_FOUND',
+      minimistParsed: null
+    });
+
+    args = parser.parseCliArguments(['ns', 'ts', 'sd', 'dd', '--skip-compilation'], commands);
+
+    expect(args).to.deep.equal({
+      error: true,
+      code: 'ARGS_EXCEEDED',
+      minimistParsed: {
+        _: ['dd'],
+        'skip-compilation': true
+      }
+    });
 
   });
 
