@@ -6,7 +6,7 @@
   "scripts": {
     "start": "./node_modules/typescript/bin/tsc --build",
     "test": "npm start && ./node_modules/typescript/bin/tsc -p test/tsconfig.json && ./node_modules/mocha/bin/mocha ./test/dist/main.spec.js",
-    "docs": "./node_modules/typedoc/bin/typedoc --out docs src --includeDeclarations typings.d.ts"
+    "docs": "./node_modules/typedoc/bin/typedoc src --out docs --name \"Argumental Developer Documentation\" --tsconfig ./tsconfig.json --excludeExternals --includeDeclarations typings.d.ts"
   },
   "repository": {
     "type": "git",
