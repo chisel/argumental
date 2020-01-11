@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { BuiltInValidators } from '../../bin/lib/validators';
+import { BuiltInValidators } from '../../dist/lib/validators';
 
 describe('Validators', function() {
 

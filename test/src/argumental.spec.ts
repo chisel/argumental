@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { ArgumentalApp } from '../../bin/lib/argumental';
-import { BuiltInValidators } from '../../bin/lib/validators';
+import { ArgumentalApp } from '../../dist/lib/argumental';
+import { BuiltInValidators } from '../../dist/lib/validators';
 
 describe('App', function() {
 
