@@ -4,11 +4,11 @@ import { BuiltInValidators } from '../../dist/lib/validators';
 
 describe('App', function() {
 
-  const app = new ArgumentalApp();
   const validators = new BuiltInValidators();
 
   it('should define app correctly', function() {
 
+    const app = new ArgumentalApp();
     let lastActionFlag: string[] = [];
 
     app
@@ -138,6 +138,60 @@ describe('App', function() {
         }
       }
     ]);
+
+  });
+
+  it('should report parsing errors correctly', function() {
+
+    const app = new ArgumentalApp();
+
+    app
+    .command('test')
+    .argument('<arg1>')
+    .argument('[arg2]')
+    .option('-o --option', '', true)
+    .option('-a --arg-option <arg>')
+    .option('-s --save [name]', '', false, null, true);
+
+    // Capture error messages
+    let errors: string[] = [];
+
+    (<any>app)._log.error = (...messages: Array<string|Error>) => {
+
+      errors = errors.concat(messages.map(message => message instanceof Error ? message.message : message));
+
+    };
+
+    // Parse and test errors
+    app.parse(['node', './test', 'a']);
+
+    expect(errors.shift()).to.equal(`Unknown command!`);
+    expect(errors).to.be.empty;
+
+    app.parse(['node', './test', 'test']);
+
+    expect(errors.shift()).to.equal('Missing value for required argument <arg1>!');
+    expect(errors).to.be.empty;
+
+    app.parse(['node', './test', 'test', '1', '2', '3']);
+
+    expect(errors.shift()).to.equal('Expected 2 arguments but got 3!');
+    expect(errors).to.be.empty;
+
+    app.parse(['node', './test', 'test', '1', '2']);
+
+    expect(errors.shift()).to.equal('Missing required option --option!');
+    expect(errors).to.be.empty;
+
+    app.parse(['node', './test', 'test', '1', '2', '-o', '-a', '2', '--arg-option']);
+
+    expect(errors.shift()).to.equal('Option --arg-option cannot be provided more than once!');
+    expect(errors).to.be.empty;
+
+    app.parse(['node', './test', 'test', '1', '2', '--arg-option', '-o']);
+
+    expect(errors.shift()).to.equal('Missing required value for option --arg-option!');
+    expect(errors).to.be.empty;
 
   });
 

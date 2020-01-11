@@ -19,7 +19,7 @@ export class Parser {
   */
   private _canOverwriteOpt(value: any): boolean {
 
-    return typeof value === 'string' || this._isArray(value);
+    return typeof value === 'string' || value === null || this._isArray(value);
 
   }
 
@@ -30,7 +30,7 @@ export class Parser {
   */
   private _sortBasedOnPriority(args: string[], values: string[]): string[] {
 
-    return values.sort((a, b) => args.join(' ').indexOf(a) - args.join(' ').indexOf(b));
+    return values.sort((a, b) => args.join(' ').indexOf(' ' + a) - args.join(' ').indexOf(' ' + b));
 
   }
 
@@ -208,7 +208,7 @@ export class Parser {
   * @param args The passed in arguments array (should be <code>process.argv.slice(2)</code>).
   * @param commands The final commands object.
   */
-  public parseCliArguments(args: string[], commands: { [command: string]: Argumental.CommandDeclaration }): Argumental.ParsedArguments|Argumental.ParsingError {
+  public parseCliArguments(args: string[], commands: { [command: string]: Argumental.CommandDeclaration }): Argumental.ParsedArguments|Error {
 
     // Detect command
     let detectedCommand: string = null;
@@ -247,7 +247,7 @@ export class Parser {
     }
 
     // If no commands detected
-    if ( ! detectedCommand ) return { error: true, code: 'COMMAND_NOT_FOUND', minimistParsed: null };
+    if ( ! detectedCommand ) return new Error(`Unknown command!`);
 
     // Configure Minimist
     const minimistConfig = { boolean: [], string: [] };
@@ -271,6 +271,10 @@ export class Parser {
       parsedArgs.args[argument.apiName] = parsed._.shift() || null;
 
     }
+
+    // If more arguments were provided (any arguments left over)
+    if ( parsed._.length )
+      return new Error(`Expected ${commands[detectedCommand].arguments.length} arguments but got ${commands[detectedCommand].arguments.length + parsed._.length}!`);
 
     // Add options
     for ( const option of commands[detectedCommand].options ) {
@@ -426,10 +430,6 @@ export class Parser {
       }
 
     }
-
-    // Validation:
-    // If more arguments were provided (any arguments left over)
-    if ( parsed._.length ) return { error: true, code: 'ARGS_EXCEEDED', minimistParsed: parsed };
 
     return parsedArgs;
 

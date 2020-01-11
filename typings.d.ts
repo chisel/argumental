@@ -86,12 +86,4 @@ declare namespace Argumental {
 
   }
 
-  interface ParsingError {
-
-    error: true;
-    code: string;
-    minimistParsed: any;
-
-  }
-
 }

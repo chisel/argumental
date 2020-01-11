@@ -666,22 +666,13 @@ describe('Parser', function() {
 
     let args = parser.parseCliArguments(['s', 'ts'], commands);
 
-    expect(args).to.deep.equal({
-      error: true,
-      code: 'COMMAND_NOT_FOUND',
-      minimistParsed: null
-    });
+    expect(args instanceof Error).to.be.true;
+    expect((<Error>args).message).to.equal('Unknown command!');
 
     args = parser.parseCliArguments(['ns', 'ts', 'sd', 'dd', '--skip-compilation'], commands);
 
-    expect(args).to.deep.equal({
-      error: true,
-      code: 'ARGS_EXCEEDED',
-      minimistParsed: {
-        _: ['dd'],
-        'skip-compilation': true
-      }
-    });
+    expect(args instanceof Error).to.be.true;
+    expect((<Error>args).message).to.equal('Expected 2 arguments but got 3!');
 
   });
 

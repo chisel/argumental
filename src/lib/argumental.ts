@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import path from 'path';
 import { Parser } from './parser';
+import { Logger } from './logger';
 
 export class ArgumentalApp {
 
@@ -22,8 +23,10 @@ export class ArgumentalApp {
   private _version: string = null;
   /** Application name. */
   private _name: string = null;
-  /** Utilities. */
+  /** Parser. */
   private _parser = new Parser();
+  /** Logger. */
+  private _log = new Logger();
 
   /**
   * Sets the application version.
@@ -274,11 +277,60 @@ export class ArgumentalApp {
     const appPath = argv.slice(1, 2)[0];
 
     if ( appPath ) this._name = path.basename(appPath);
+    this._log.appName = this._name;
 
     // Parse arguments
     const parsed = this._parser.parseCliArguments(argv.slice(2), this._commands);
 
-    // Validate parsed arguments
+    // If parsing error
+    if ( parsed instanceof Error ) return this._log.error(parsed);
+
+    const command = this._commands[parsed.cmd];
+
+    // Validate arguments
+    for ( const argument of command.arguments ) {
+
+      if ( argument.required && parsed.args[argument.apiName] === null )
+        return this._log.error(`Missing value for required argument <${argument.name}>!`);
+
+    }
+
+    // Validate options
+    for ( const option of command.options ) {
+
+      const value = parsed.opts[option.apiName || option.shortName];
+      const logName = option.longName ? `--${option.longName}` : `-${option.shortName}` ;
+
+      // Missing required option
+      if ( option.required && ((! option.argument && value === false) || (option.argument && value === undefined)) )
+        return this._log.error(`Missing required option ${logName}!`);
+
+      // Option is not multi but occurs multiple times
+      if ( ! option.multi && value && typeof value === 'object' && value.constructor === Array )
+        return this._log.error(`Option ${logName} cannot be provided more than once!`);
+
+      // Missing required argument of option
+      if ( option.argument && option.argument.required ) {
+
+        // If array
+        if ( value && typeof value === 'object' && value.constructor === Array ) {
+
+          for ( const v of value ) {
+
+            if ( v === null ) return this._log.error(`Missing required value for option ${logName}!`);
+
+          }
+
+        }
+        else if ( value === null ) {
+
+          return this._log.error(`Missing required value for option ${logName}!`);
+
+        }
+
+      }
+
+    }
 
   }
 
