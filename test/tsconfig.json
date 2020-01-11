@@ -9,7 +9,7 @@
     "resolveJsonModule": true,
     "module": "commonjs",
     "moduleResolution": "node",
-    "target": "es2018",
+    "target": "es2016",
     "declaration": false,
     "sourceRoot": "src",
     "outDir": "dist",
@@ -17,7 +17,7 @@
       "../node_modules/@types"
     ],
     "lib": [
-      "es2018"
+      "es2016"
     ]
   },
   "include": [

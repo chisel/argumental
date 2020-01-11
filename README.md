@@ -8,6 +8,8 @@ Argumental is a framework for building CLI applications using Node.js, which ena
 npm install argumental
 ```
 
+> **NOTE:** Supports Node.js 6 or higher (ES2016).
+
 # Quick Start
 
 TypeScript/ES6 module:
