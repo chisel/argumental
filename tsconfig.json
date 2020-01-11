@@ -12,7 +12,7 @@
     "target": "es2018",
     "declaration": true,
     "sourceRoot": "src",
-    "outDir": "bin",
+    "outDir": "dist",
     "typeRoots": [
       "node_modules/@types"
     ],
@@ -21,7 +21,7 @@
     ]
   },
   "exclude": [
-    "bin",
+    "dist",
     "docs",
     "node_modules",
     "test"
