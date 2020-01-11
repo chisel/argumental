@@ -141,7 +141,7 @@ describe('App', function() {
 
   });
 
-  it('should report parsing errors correctly', function() {
+  it('should report parsing errors correctly', async function() {
 
     const app = new ArgumentalApp();
 
@@ -163,32 +163,32 @@ describe('App', function() {
     };
 
     // Parse and test errors
-    app.parse(['node', './test', 'a']);
+    await app.parse(['node', './test', 'a']);
 
     expect(errors.shift()).to.equal(`Unknown command!`);
     expect(errors).to.be.empty;
 
-    app.parse(['node', './test', 'test']);
+    await app.parse(['node', './test', 'test']);
 
     expect(errors.shift()).to.equal('Missing value for required argument <arg1>!');
     expect(errors).to.be.empty;
 
-    app.parse(['node', './test', 'test', '1', '2', '3']);
+    await app.parse(['node', './test', 'test', '1', '2', '3']);
 
     expect(errors.shift()).to.equal('Expected 2 arguments but got 3!');
     expect(errors).to.be.empty;
 
-    app.parse(['node', './test', 'test', '1', '2']);
+    await app.parse(['node', './test', 'test', '1', '2']);
 
     expect(errors.shift()).to.equal('Missing required option --option!');
     expect(errors).to.be.empty;
 
-    app.parse(['node', './test', 'test', '1', '2', '-o', '-a', '2', '--arg-option']);
+    await app.parse(['node', './test', 'test', '1', '2', '-o', '-a', '2', '--arg-option']);
 
     expect(errors.shift()).to.equal('Option --arg-option cannot be provided more than once!');
     expect(errors).to.be.empty;
 
-    app.parse(['node', './test', 'test', '1', '2', '--arg-option', '-o']);
+    await app.parse(['node', './test', 'test', '1', '2', '--arg-option', '-o']);
 
     expect(errors.shift()).to.equal('Missing required value for option --arg-option!');
     expect(errors).to.be.empty;

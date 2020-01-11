@@ -271,7 +271,7 @@ export class ArgumentalApp {
   * Parses the process arguments (argv) and runs the app.
   * @param argv Process arguments to parse.
   */
-  public parse(argv: string[]): void {
+  public async parse(argv: string[]): Promise<void> {
 
     // Extract app name
     const appPath = argv.slice(1, 2)[0];

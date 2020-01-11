@@ -72,6 +72,7 @@ Argumental provides a [chainable API](#chaining-and-context) to define the whole
       - **cmd**: The invoked command's name.
   - **version(___version___)**: Sets the application version.
     - ___version___: The version of the application.
+  - **parse(___argv___)**: Parses the passed in array of command-line arguments (e.g. `process.argv`) and ends the chain by returning a void promise which always resolves.
   - **global**: Turns [global declaration](#globals) on within the chain. Any calls to `argument()`, `option()`, and `action()` methods would define globals instead until `command()` is called again.
   - **STRING**: Built-in validator which validates the argument value as string.
   - **NUMBER**: Built-in validator which validates the argument value as a number (also converts the input to number).
