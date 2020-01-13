@@ -78,6 +78,7 @@ Defines an option for the current command.
   - ___validators___: `Optional` A single or an array of [validators](#validation) to validate the option's argument value (only applies to options with an argument).
   - ___multi___: `Optional` Indicates whether this option can be repeated more than once (only practical for options with argument).
   - ___defaultValue___: `Optional` The default value of the argument if value was not provided (only applies to options with an optional argument, e.g. `--option [argument]`).
+  - ___immediate___: `Optional` Indicates if all other components (arguments, options, etc.) should be ignored in the parsing process and action handlers should be called as soon as possible when this option is provided. This behavior is desired with options such as `--help` and `--version`. Keep in mind that validators will be run before the action handlers for the first encountered immediate option only.
 
 ### action(___handler___)
 
@@ -103,6 +104,10 @@ Sets the required flag for the current option.
 Sets the multi flag for the current option.
   - ___value___: Multi flag's boolean value.
 
+### immediate(___value___)
+
+Sets the immediate flag for the current option.
+  - ___value___: Immediate flag's boolean value.
 
 ### default(___value___)
 

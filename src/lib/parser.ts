@@ -159,8 +159,9 @@ export class Parser {
   * @param validators A single or an array of validators.
   * @param multi A boolean indicating if option can be repeated more than once.
   * @param defaultValue The option's argument's default value.
+  * @param immediate Whether to stop parsing other components and run the action handlers when this option is provided.
   */
-  public parseOption(syntax: string, description?: string, required?: boolean, validators?: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, multi?: boolean, defaultValue?: string|boolean|number): Argumental.OptionDeclaration {
+  public parseOption(syntax: string, description?: string, required?: boolean, validators?: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, multi?: boolean, defaultValue?: string|boolean|number, immediate?: boolean): Argumental.OptionDeclaration {
 
     const option: Argumental.OptionDeclaration = {
       shortName: null,
@@ -169,7 +170,8 @@ export class Parser {
       description: description || null,
       argument: null,
       required: !! required,
-      multi: !! multi
+      multi: !! multi,
+      immediate: !! immediate
     };
 
     // Parse short name
@@ -271,10 +273,6 @@ export class Parser {
 
     // If top-level has no arguments and detected is top-level while arguments are provided, count as unknown command
     if ( detectedCommand === '' && ! commands[detectedCommand].arguments.length && parsed._.length ) return new Error(`Unknown command!`);
-
-    // If more arguments were provided (any arguments left over)
-    if ( parsed._.length )
-      return new Error(`Expected ${commands[detectedCommand].arguments.length} arguments but got ${commands[detectedCommand].arguments.length + parsed._.length}!`);
 
     // Add options
     for ( const option of commands[detectedCommand].options ) {
@@ -426,6 +424,40 @@ export class Parser {
         if ( typeof parsedArgs.opts[name] !== 'string' || ! (<string>parsedArgs.opts[name]).match(/^".*"$/i) ) continue;
 
         parsedArgs.opts[name] = (<string>parsedArgs.opts[name]).replace(/^"/, '').replace(/"$/, '');
+
+      }
+
+    }
+
+    let immediateOption: Argumental.OptionDeclaration = null;
+
+    // Check for immediate options
+    for ( const option of commands[detectedCommand].options ) {
+
+      // If immediate option provided
+      if ( option.immediate && ((option.argument && parsedArgs.opts[option.apiName || option.shortName] !== undefined) || (! option.argument && parsedArgs.opts[option.apiName || option.shortName] === true )) ) {
+
+        immediateOption = option;
+        break;
+
+      }
+
+    }
+
+    // If more arguments were provided (any arguments left over) and no immediate option provided
+    if ( parsed._.length && ! immediateOption )
+      return new Error(`Expected ${commands[detectedCommand].arguments.length} arguments but got ${commands[detectedCommand].arguments.length + parsed._.length}!`);
+
+    // If unknown options were provided and no immediate option was
+    if ( ! immediateOption ) {
+
+      for ( const key in parsed ) {
+
+        if ( key === '_' ) continue;
+
+        // If key was not defined in current command's options
+        if ( ! commands[detectedCommand].options.filter(opt => opt.shortName === key || opt.longName === key).length )
+          return new Error(`Unknown option ${key}!`);
 
       }
 

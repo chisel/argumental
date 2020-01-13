@@ -70,6 +70,7 @@ describe('App', function() {
         description: 'displays command help',
         required: false,
         multi: false,
+        immediate: true,
         argument: null
       },
       {
@@ -79,6 +80,7 @@ describe('App', function() {
         description: 'Enables logging',
         required: false,
         multi: true,
+        immediate: false,
         argument: {
           name: 'level',
           apiName: 'level',
@@ -94,6 +96,7 @@ describe('App', function() {
         description: 'Overrides the script name',
         required: false,
         multi: false,
+        immediate: false,
         argument: {
           name: 'script_name',
           apiName: 'scriptName',
@@ -109,6 +112,7 @@ describe('App', function() {
         description: 'Overwrites any scripts with the same type and name',
         required: true,
         multi: false,
+        immediate: false,
         argument: null
       },
       {
@@ -118,6 +122,7 @@ describe('App', function() {
         description: 'Cleans the scripts directory (if force is true, kills any script processes before cleaning)',
         required: false,
         multi: false,
+        immediate: false,
         argument: {
           name: 'force',
           apiName: 'force',
@@ -681,6 +686,7 @@ describe('App', function() {
     app.top
     .description('Top-level description')
     .option('-t [val]')
+    .immediate(true)
     .description('Top-level option')
     .required(true)
     .multi(true)
@@ -730,6 +736,7 @@ describe('App', function() {
           description: 'displays application help',
           required: false,
           multi: false,
+          immediate: true,
           argument: null
         },
         {
@@ -739,6 +746,7 @@ describe('App', function() {
           description: 'Top-level option',
           required: true,
           multi: true,
+          immediate: true,
           argument: {
             name: 'val',
             apiName: 'val',
@@ -764,6 +772,7 @@ describe('App', function() {
           description: 'displays command help',
           required: false,
           multi: false,
+          immediate: true,
           argument: null
         },
         {
@@ -773,6 +782,7 @@ describe('App', function() {
           description: null,
           required: true,
           multi: false,
+          immediate: false,
           argument: null
         }
       ],
@@ -809,6 +819,7 @@ describe('App', function() {
           description: 'displays command help',
           required: false,
           multi: false,
+          immediate: true,
           argument: null
         },
         {
@@ -818,6 +829,7 @@ describe('App', function() {
           required: false,
           description: 'Port',
           multi: false,
+          immediate: false,
           argument: {
             name: 'number',
             apiName: 'number',
@@ -874,6 +886,7 @@ describe('App', function() {
             description: 'displays application help',
             required: false,
             multi: false,
+            immediate: true,
             argument: null
           },
           {
@@ -883,11 +896,56 @@ describe('App', function() {
             description: null,
             required: false,
             multi: false,
+            immediate: false,
             argument: null
           }
         ],
         actions: [(<any>app)._commands[''].actions[0]]
       }
+    });
+
+  });
+
+  it('should parse immediate options correctly', async function() {
+
+    const app = new ArgumentalApp();
+    let parsed: Argumental.ParsedArguments = null;
+
+    // Capture error messages
+    let errors: string[] = [];
+
+    (<any>app)._log.error = (...messages: Array<string|Error>) => {
+
+      errors = errors.concat(messages.map(message => message instanceof Error ? message.message : message));
+
+    };
+
+    app
+    .option('-i --im <arg>')
+    .validate(app.BOOLEAN)
+    .immediate(true)
+    .option('-s')
+    .required(true)
+    .argument('<arg>')
+    .action((args, opts, cmd) => { parsed = {args, opts, cmd}; });
+
+    await app.parse(['node', 'test', '-i']);
+
+    expect(errors.shift()).to.equal(`Missing required value for option --im!`);
+    expect(errors).to.be.empty;
+
+    await app.parse(['node', 'test', '-i', 'str']);
+
+    expect(errors.shift()).to.equal(`Invalid value for option im!\n   Value must be boolean.`);
+    expect(errors).to.be.empty;
+
+    await app.parse(['node', 'test', '-i', 'true']);
+
+    expect(errors).to.be.empty;
+    expect(parsed).to.deep.equal({
+      cmd: '',
+      args: {},
+      opts: { i: true, im: true }
     });
 
   });

@@ -118,13 +118,14 @@ describe('Parser', function() {
 
   it('should parse options correctly', function() {
 
-    expect(parser.parseOption('-p --port <port_number>', 'desc', false)).to.deep.equal({
+    expect(parser.parseOption('-p --port <port_number>', 'desc', false, null, false, undefined, true)).to.deep.equal({
       shortName: 'p',
       longName: 'port',
       apiName: 'port',
       description: 'desc',
       required: false,
       multi: false,
+      immediate: true,
       argument: {
         name: 'port_number',
         apiName: 'portNumber',
@@ -141,6 +142,7 @@ describe('Parser', function() {
       description: 'desc',
       required: false,
       multi: false,
+      immediate: false,
       argument: {
         name: 'port_number',
         apiName: 'portNumber',
@@ -157,6 +159,7 @@ describe('Parser', function() {
       description: 'desc',
       required: false,
       multi: false,
+      immediate: false,
       argument: null
     });
 
@@ -167,6 +170,7 @@ describe('Parser', function() {
       description: 'desc',
       required: false,
       multi: false,
+      immediate: false,
       argument: null
     });
 
@@ -177,6 +181,7 @@ describe('Parser', function() {
       description: 'desc',
       required: false,
       multi: false,
+      immediate: false,
       argument: null
     });
 
@@ -187,6 +192,7 @@ describe('Parser', function() {
       description: 'desc',
       required: false,
       multi: false,
+      immediate: false,
       argument: {
         name: 'port_number',
         apiName: 'portNumber',
@@ -203,6 +209,7 @@ describe('Parser', function() {
       description: 'desc',
       required: false,
       multi: false,
+      immediate: false,
       argument: {
         name: 'port_number',
         apiName: 'portNumber',
@@ -219,6 +226,7 @@ describe('Parser', function() {
       description: 'desc',
       required: false,
       multi: false,
+      immediate: false,
       argument: null
     });
 
@@ -229,6 +237,7 @@ describe('Parser', function() {
       description: 'desc',
       required: false,
       multi: false,
+      immediate: false,
       argument: null
     });
 
@@ -239,6 +248,7 @@ describe('Parser', function() {
       description: 'desc',
       required: false,
       multi: false,
+      immediate: false,
       argument: null
     });
 
@@ -463,7 +473,8 @@ describe('Parser', function() {
             required: false,
             argument: null,
             description: null,
-            multi: false
+            multi: false,
+            immediate: false
           },
           {
             shortName: 'd',
@@ -472,7 +483,8 @@ describe('Parser', function() {
             required: false,
             argument: null,
             description: null,
-            multi: false
+            multi: false,
+            immediate: false
           },
           {
             shortName: 's',
@@ -481,7 +493,8 @@ describe('Parser', function() {
             required: false,
             argument: null,
             description: null,
-            multi: false
+            multi: false,
+            immediate: false
           },
           {
             shortName: 'c',
@@ -496,7 +509,8 @@ describe('Parser', function() {
               validators: [],
               default: undefined
             },
-            description: null
+            description: null,
+            immediate: false
           },
           {
             shortName: 'p',
@@ -511,7 +525,8 @@ describe('Parser', function() {
               validators: [],
               default: undefined
             },
-            description: null
+            description: null,
+            immediate: false
           },
           {
             shortName: 'x',
@@ -526,7 +541,8 @@ describe('Parser', function() {
               validators: [],
               default: undefined
             },
-            description: null
+            description: null,
+            immediate: false
           },
           {
             shortName: 'f',
@@ -535,7 +551,8 @@ describe('Parser', function() {
             required: true,
             multi: false,
             argument: null,
-            description: null
+            description: null,
+            immediate: false
           },
           {
             shortName: 'a',
@@ -550,7 +567,8 @@ describe('Parser', function() {
               validators: [],
               default: undefined
             },
-            description: null
+            description: null,
+            immediate: false
           },
           {
             shortName: 'b',
@@ -565,14 +583,15 @@ describe('Parser', function() {
               validators: [],
               default: undefined
             },
-            description: null
+            description: null,
+            immediate: false
           }
         ],
         actions: []
       }
     };
 
-    let args = parser.parseCliArguments(['new', 'script', '--ext', '.ts', 'some-script.proc.ts', '-ds', '-sc', 'somewhere', '-c', 'here', '--copy-to', 'there', '-x', '-a', '2', '--bail', '0', '-b', '0'], commands);
+    let args = parser.parseCliArguments(['new', 'script', 'some-script.proc.ts', '-ds', '-sc', 'somewhere', '-c', 'here', '--copy-to', 'there', '-x', '-a', '2', '--bail', '0', '-b', '0'], commands);
 
     expect(args).to.deep.equal({
       cmd: 'new script',
@@ -665,7 +684,8 @@ describe('Parser', function() {
             required: false,
             argument: null,
             description: null,
-            multi: false
+            multi: false,
+            immediate: false
           }
         ],
         actions: []
@@ -681,6 +701,11 @@ describe('Parser', function() {
 
     expect(args instanceof Error).to.be.true;
     expect((<Error>args).message).to.equal('Expected 2 arguments but got 3!');
+
+    args = parser.parseCliArguments(['ns', 'ts', 'sd', '--blah'], commands);
+
+    expect(args instanceof Error).to.be.true;
+    expect((<Error>args).message).to.equal('Unknown option blah!');
 
   });
 

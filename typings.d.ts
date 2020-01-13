@@ -65,6 +65,8 @@ declare namespace Argumental {
     argument: ArgumentDeclaration;
     /** Whether this option can be provided more than once. */
     multi: boolean;
+    /** Whether to stop parsing other components and run the action handlers when this option is provided (e.g. --help). */
+    immediate: boolean;
 
   }
 
