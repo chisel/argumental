@@ -23,47 +23,69 @@ declare namespace Argumental {
 
   interface GlobalDeclaration {
 
+    /** Global argument declarations. */
     arguments: CommandArgumentDeclaration[];
+    /** Global option declarations. */
     options: OptionDeclaration[];
+    /** Global action handlers. */
     actions: Argumental.ActionHandler[];
 
   }
 
   interface CommandDeclaration {
 
+    /** Command name. */
     name: string;
+    /** Command description. */
     description: string;
+    /** List of registered command aliases. */
     aliases: string[];
+    /** Argument declarations for this command. */
     arguments: CommandArgumentDeclaration[];
+    /** Option declarations for this command. */
     options: OptionDeclaration[];
+    /** Action handlers of this command. */
     actions: Argumental.ActionHandler[];
 
   }
 
   interface OptionDeclaration {
 
+    /** Option's short name. */
     shortName: string;
+    /** Option's long name. */
     longName: string;
+    /** Option's long name in camel case. */
     apiName: string;
+    /** Option description. */
     description: string;
+    /** Whether this option is required or not. */
     required: boolean;
+    /** Option's argument. */
     argument: ArgumentDeclaration;
+    /** Whether this option can be provided more than once. */
     multi: boolean;
 
   }
 
   interface ArgumentDeclaration {
 
+    /** Argument name. */
     name: string;
+    /** Argument name in camel case. */
     apiName: string;
+    /** Whether this argument is required or not. */
     required: boolean;
+    /** Argument validators. */
     validators: Array<Argumental.Validator|RegExp>;
+    /** Argument's default value (if optional). */
     default: string|number|boolean;
 
   }
 
   interface CommandArgumentDeclaration extends ArgumentDeclaration {
 
+    /** Argument description. */
     description: string;
 
   }

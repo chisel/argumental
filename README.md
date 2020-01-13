@@ -142,7 +142,7 @@ Turns [top-level declaration](#chaining-and-context) on within the chain. Any ca
 Configures Argumental with the given options. Options object can have any of the following properties:
   - ___colors___: Boolean indicating if logs should be colorful (defaults to `true`).
   - ___help___: A help renderer function to invoke when help must be rendered and logged to console. The function takes the following parameters:
-    - ___definitions___: A key-value pair object containing all [command declarations](https://github.com/chisel/argumental/blob/master/typings.d.ts#L32) where key `''` refers to the top-level command.
+    - ___definitions___: A key-value pair object containing all [command declarations](https://github.com/chisel/argumental/blob/master/typings.d.ts#L35) where key `''` refers to the top-level command.
     - ___cmd___: The invoked command name.
 
 ### STRING
