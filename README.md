@@ -103,7 +103,7 @@ app
 
 If command is not called at the start of the chain, all declarations will be applied on "top-level". Example:
 
-The following defines **app <arg1> --force** (considering application name is `app`, e.g. `npm install app -g`):
+The following defines **app &lt;arg1&gt; --force** (considering application name is `app`, e.g. `npm install app -g`):
 ```js
 app
 .argument('<arg1>')
@@ -114,7 +114,7 @@ app
 
 Top-level declaration can also be enabled anywhere in the chain by using the `top` keyword.
 
-> **NOTE:** Options `-v --version` and `--help` are defined on top-level by default. To overwrite `-v --version`, don't call `version()` in the chain and define the option manually. To overwrite `--help`, provide a `helper` using the `config()` method.
+> **NOTE:** Options `-v --version` and `--help` are defined on top-level by default. To overwrite `-v --version`, don't call `version()` in the chain and define the option manually (e.g. `option('-v --version')`). To overwrite `--help`, provide the `help` method using the `config()` method.
 
 Arguments, options, and actions can also be defined on a global context and applied to all commands (excluding top-level) using the `global` keyword. Example:
 
@@ -147,12 +147,12 @@ When switching to global context, all definitions will be appended to previous a
 
 ## Validation
 
-Validators are functions that take a user-provided argument value and check it based on specific rules. If validation fails, validators must throw an error with a custom message to display to the user. If a validator returns a value, that value will be used instead; this allows type casting and input sanitization.
+Validators are functions that take a user-provided argument value and check it based on specific rules. If validation fails, validators must throw an error with a custom message to display to the user. If a validator returns a value, that value will overwrite user's original value; this allows type casting and input sanitization.
 
 Validator functions take the following parameters:
   - ___value___: The argument value in its current state.
-  - ___name___: The argument name.
-  - ___arg___: A boolean indicating if value belongs to a plain argument or to an option argument.
+  - ___name___: The argument or option name.
+  - ___arg___: A boolean indicating if value belongs to a plain argument or to an option's argument.
   - ___cmd___: The name of the invoked command.
 
 ```js
