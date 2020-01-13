@@ -69,7 +69,7 @@ Defines an argument for the current command.
   - ___validators___: `Optional` A single or an array of [validators](#validation) to validate the argument value.
   - ___defaultValue___: `Optional` The default value of the argument if value was not provided (only works with optional arguments).
 
-### option(___syntax___, ___description___, ___required___, ___validators___, ___multi___, ___defaultValue___)
+### option(___syntax___, ___description___, ___required___, ___validators___, ___multi___, ___defaultValue___, ___immediate___)
 
 Defines an option for the current command.
   - ___syntax___: The option syntax. You can define a one letter shorthand (e.g. `-p`), an option name (e.g. `--port-number`), and one argument (e.g. `<port_number>`) in the syntax (e.g. `-p --port-number <port_number>`). Option name can only contain alphanumeric characters and `-`s.
