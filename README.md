@@ -201,7 +201,7 @@ Built-in [validator](#validation) which validates the argument value as boolean 
 
 Built-in [validator](#validation) which validates the argument value as a file path (checks for file existence and read access synchronously).
 
-## Chaining And Context
+# Chaining And Context
 
 Each call to the `command()` method determines that until this method is called again, all calls to other methods are within this command's context. Example:
 
@@ -263,7 +263,7 @@ When switching to global context, all definitions will be appended to previous a
 
 > **NOTE:** Chain always starts at top-level and should end with `parse()`.
 
-## Validation
+# Validation
 
 Validators are functions that take a user-provided argument value and check it based on specific rules. If validation fails, validators must throw an error with a custom message to display to the user. If a validator returns a value, that value will overwrite user's original value; this allows type casting and input sanitization.
 
