@@ -2,10 +2,13 @@ import _ from 'lodash';
 import path from 'path';
 import { Parser } from './parser';
 import { Logger } from './logger';
+import { BuiltInValidators } from './validators';
 
-export class ArgumentalApp {
+export class ArgumentalApp extends BuiltInValidators {
 
   constructor() {
+
+    super();
 
     // Define --help top-level
     this._commands[''].options.push(this._parser.parseOption('--help', 'displays application help'));

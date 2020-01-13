@@ -1,10 +1,7 @@
 import { expect } from 'chai';
 import { ArgumentalApp } from '../../dist/lib/argumental';
-import { BuiltInValidators } from '../../dist/lib/validators';
 
 describe('App', function() {
-
-  const validators = new BuiltInValidators();
 
   it('should define app correctly', function() {
 
@@ -20,10 +17,10 @@ describe('App', function() {
     .alias('newScript')
     .alias('sn')
     .argument('<script_type>', 'Script type', /^scraper$|^processor$|^validator$|^reporter$|^deployer$/i)
-    .argument('<file_path>', 'Relative path to the script file', validators.FILE_PATH)
+    .argument('<file_path>', 'Relative path to the script file', app.FILE_PATH)
     .option('--override-name -o <script_name>', 'Overrides the script name')
     .option('--overwrite -O', 'Overwrites any scripts with the same type and name', true)
-    .option('-c --clean [force]', 'Cleans the scripts directory (if force is true, kills any script processes before cleaning)', false, validators.BOOLEAN)
+    .option('-c --clean [force]', 'Cleans the scripts directory (if force is true, kills any script processes before cleaning)', false, app.BOOLEAN)
     .action(() => { })
     .action(() => { })
     .global
@@ -60,7 +57,7 @@ describe('App', function() {
         apiName: 'filePath',
         description: 'Relative path to the script file',
         required: true,
-        validators: [validators.FILE_PATH],
+        validators: [app.FILE_PATH],
         default: undefined
       }
     ]);
@@ -126,7 +123,7 @@ describe('App', function() {
           apiName: 'force',
           required: false,
           default: undefined,
-          validators: [validators.BOOLEAN]
+          validators: [app.BOOLEAN]
         }
       }
     ]);
@@ -514,7 +511,7 @@ describe('App', function() {
     app
     .command('test')
     .option('-p --port <port_number>', null, false, [
-      validators.NUMBER,
+      app.NUMBER,
       value => {values.push(value)}
     ])
     .option('--logs [level]', null, false, [
@@ -523,7 +520,7 @@ describe('App', function() {
       value => {values.push(value)}
     ])
     .option('-n <num>', null, true, [
-      validators.NUMBER,
+      app.NUMBER,
       (value, name, arg, cmd) => {
         if ( value > 100 ) throw new Error(`Invalid number ${value} for ${arg ? 'argument' : 'option'} ${name} of command ${cmd}!`);
       },
@@ -575,12 +572,12 @@ describe('App', function() {
     .version('1.0.2')
     .argument('<ehem>')
     .command('test')
-    .argument('<arg1>', null, validators.BOOLEAN, true)
+    .argument('<arg1>', null, app.BOOLEAN, true)
     .argument('[arg2]', null, null, 'def2')
     .argument('[arg3]', null, null, 'def3')
     .option('-l', null, false, null, false, true)
     .option('--log [level]', null, false, null, false, 'silent')
-    .option('--error [code]', null, true, validators.NUMBER, true, 0)
+    .option('--error [code]', null, true, app.NUMBER, true, 0)
     .action((a, o) => {
       args = a;
       opts = o;
@@ -688,7 +685,7 @@ describe('App', function() {
     .required(true)
     .multi(true)
     .default(false)
-    .validate(validators.BOOLEAN)
+    .validate(app.BOOLEAN)
     .action(actionHandler);
 
     // Global declarations
@@ -716,7 +713,7 @@ describe('App', function() {
     .description('Test 2 command')
     .option('-p --port <number>')
     .description('Port')
-    .sanitize(validators.NUMBER)
+    .sanitize(app.NUMBER)
     .action(actionHandler);
 
     const commands = (<any>app)._commands;
@@ -747,7 +744,7 @@ describe('App', function() {
             apiName: 'val',
             required: false,
             default: false,
-            validators: [validators.BOOLEAN]
+            validators: [app.BOOLEAN]
           }
         }
       ],
@@ -826,7 +823,7 @@ describe('App', function() {
             apiName: 'number',
             required: true,
             default: undefined,
-            validators: [validators.NUMBER]
+            validators: [app.NUMBER]
           }
         }
       ],
