@@ -171,8 +171,8 @@ export class ArgumentalApp {
   public argument(syntax: string): ArgumentalApp;
   public argument(syntax: string, description: string): ArgumentalApp;
   public argument(syntax: string, description: string, validators: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>): ArgumentalApp;
-  public argument(syntax: string, description: string, validators: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, defaultValue: string|number|boolean): ArgumentalApp;
-  public argument(syntax: string, description?: string, validators?: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, defaultValue?: string|number|boolean): ArgumentalApp {
+  public argument(syntax: string, description: string, validators: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, defaultValue: any): ArgumentalApp;
+  public argument(syntax: string, description?: string, validators?: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, defaultValue?: any): ArgumentalApp {
 
     // Check if no command is being declared and global flag is not set
     if ( this._currentCommand === null && ! this._global )
@@ -227,8 +227,8 @@ export class ArgumentalApp {
   public option(syntax: string, description: string, required: boolean): ArgumentalApp;
   public option(syntax: string, description: string, required: boolean, validators: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>): ArgumentalApp;
   public option(syntax: string, description: string, required: boolean, validators: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, multi: boolean): ArgumentalApp;
-  public option(syntax: string, description: string, required: boolean, validators: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, multi: boolean, defaultValue: string|number|boolean): ArgumentalApp;
-  public option(syntax: string, description?: string, required?: boolean, validators?: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, multi?: boolean, defaultValue?: string|number|boolean): ArgumentalApp {
+  public option(syntax: string, description: string, required: boolean, validators: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, multi: boolean, defaultValue: any): ArgumentalApp;
+  public option(syntax: string, description?: string, required?: boolean, validators?: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, multi?: boolean, defaultValue?: any): ArgumentalApp {
 
     // Check if no command is being declared and global flag is not set
     if ( this._currentCommand === null && ! this._global )
@@ -239,8 +239,8 @@ export class ArgumentalApp {
 
     // Check if option is already defined for current command or globally
     if (
-      (this._global && this._globalDeclaration.options.filter(opt => opt.longName === option.longName || option.shortName === opt.shortName || (opt.apiName && opt.apiName === option.apiName)).length) ||
-      (this._currentCommand && this._commands[this._currentCommand].options.filter(opt => opt.longName === option.longName || option.shortName === opt.shortName || (opt.apiName && opt.apiName === option.apiName)).length)
+      (this._global && this._globalDeclaration.options.filter(opt => (opt.longName && opt.longName === option.longName) || (opt.shortName && option.shortName === opt.shortName) || (opt.apiName && opt.apiName === option.apiName)).length) ||
+      (this._currentCommand && this._commands[this._currentCommand].options.filter(opt => (opt.longName && opt.longName === option.longName) || (opt.shortName && option.shortName === opt.shortName) || (opt.apiName && opt.apiName === option.apiName)).length)
     )
       throw new Error(`ARGUMENTAL_ERROR: Option ${option.longName || option.shortName} is already defined!`);
 
@@ -291,7 +291,7 @@ export class ArgumentalApp {
     for ( const argument of command.arguments ) {
 
       if ( argument.required && parsed.args[argument.apiName] === null )
-        return this._log.error(`Missing value for required argument <${argument.name}>!`);
+        return this._log.error(`Missing required argument <${argument.name}>!`);
 
     }
 
@@ -327,6 +327,159 @@ export class ArgumentalApp {
           return this._log.error(`Missing required value for option ${logName}!`);
 
         }
+
+      }
+
+    }
+
+    // Run argument validators
+    for ( const argument of command.arguments ) {
+
+      // Skip validators if argument is optional and not provided
+      if ( ! argument.required && parsed.args[argument.apiName] === null ) continue;
+
+      for ( const validator of argument.validators ) {
+
+        // Regex validator
+        if ( validator && typeof validator === 'object' && validator.constructor === RegExp ) {
+
+          if ( typeof parsed.args[argument.apiName] !== 'string' || ! parsed.args[argument.apiName].match(validator) )
+            return this._log.error(`Invalid value for argument ${argument.name}!`);
+
+          continue;
+
+        }
+
+        // Validator function
+        try {
+
+          const newValue = await (<Argumental.Validator>validator)(parsed.args[argument.apiName], argument.name, true, parsed.cmd);
+
+          // Update the value
+          if ( newValue !== undefined ) parsed.args[argument.apiName] = newValue;
+
+        }
+        catch (error) {
+
+          return this._log.error(error.message);
+
+        }
+
+      }
+
+    }
+
+    // Run option validators
+    for ( const option of command.options ) {
+
+      const apiName = option.apiName || option.shortName;
+      let wrapped = false;
+
+      // If option is binary, skip validation
+      if ( ! option.argument ) continue;
+      // If option not required and not provided, skip validation
+      if ( ! option.required && parsed.opts[apiName] === undefined ) continue;
+      // If string option's argument not required and not provided (single occurrence only), skip validation
+      if ( ! option.argument.required && parsed.opts[apiName] === null ) continue;
+
+      // If value is not an array, wrap it temporarily
+      if ( ! parsed.opts[apiName] || typeof parsed.opts[apiName] !== 'object' || parsed.opts[apiName].constructor !== Array ) {
+
+        parsed.opts[apiName] = [<string>parsed.opts[apiName]];
+        wrapped = true;
+
+      }
+
+      // For each option's value
+      for ( let i = 0; i < (<Array<string>>parsed.opts[apiName]).length; i++ ) {
+
+        let value = (<Array<string>>parsed.opts[apiName])[i];
+
+        // If string option's argument not required and not provided, skip validation
+        if ( ! option.argument.required && value === null ) continue;
+
+        // Run the validators
+        for ( const validator of option.argument.validators ) {
+
+          // Regex validator
+          if ( validator && typeof validator === 'object' && validator.constructor === RegExp ) {
+
+            if ( typeof value !== 'string' || ! value.match(validator) )
+              return this._log.error(`Invalid value for option ${option.longName || option.shortName}!`);
+
+            continue;
+
+          }
+
+          // Validator function
+          try {
+
+            const newValue = await (<Argumental.Validator>validator)(value, option.longName || option.shortName, false, parsed.cmd);
+
+            // Update the value
+            if ( newValue !== undefined ) (<Array<string>>parsed.opts[apiName])[i] = (value = newValue);
+
+          }
+          catch (error) {
+
+            return this._log.error(error.message);
+
+          }
+
+        }
+
+      }
+
+      // Unwrap the value if it was wrapped
+      if ( wrapped ) parsed.opts[apiName] = parsed.opts[apiName][0];
+
+    }
+
+    // Apply argument defaults
+    for ( const argument of command.arguments ) {
+
+      if ( ! argument.required && parsed.args[argument.apiName] === null )
+        parsed.args[argument.apiName] = <any>argument.default;
+
+    }
+
+    // Apply option defaults
+    for ( const option of command.options ) {
+
+      const apiName = option.apiName || option.shortName;
+
+      if ( ! option.argument || option.argument.required ) continue;
+
+      // If array
+      if ( parsed.opts[apiName] && typeof parsed.opts[apiName] === 'object' && parsed.opts[apiName].constructor === Array ) {
+
+        for ( let i = 0; i < (<Array<string>>parsed.opts[apiName]).length; i++ ) {
+
+          if ( parsed.opts[apiName][i] === null ) parsed.opts[apiName][i] = <any>option.argument.default;
+
+        }
+
+      }
+      // Single value
+      else {
+
+        if ( parsed.opts[apiName] === null ) parsed.opts[apiName] = <any>option.argument.default;
+
+      }
+
+    }
+
+    // Run action handlers
+    for ( const action of command.actions ) {
+
+      try {
+
+        await action(parsed.args, parsed.opts, parsed.cmd);
+
+      }
+      catch (error) {
+
+        return this._log.error(error.message);
 
       }
 

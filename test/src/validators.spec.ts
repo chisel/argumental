@@ -7,13 +7,13 @@ describe('Validators', function() {
 
   it('should validate strings', function() {
 
-    expect(validators.STRING('string value', true, 'correct value', 'command')).to.be.undefined;
+    expect(validators.STRING('string value', 'correct value', true, 'command')).to.be.undefined;
 
     let validationError: Error = null;
 
     try {
 
-      validators.STRING(true, false, 'incorrect value', 'command')
+      validators.STRING(true, 'incorrect value', false, 'command')
 
     }
     catch (error) {
@@ -29,14 +29,14 @@ describe('Validators', function() {
 
   it('should validate numbers', function() {
 
-    expect(validators.NUMBER(1000, false, 'correct value', 'command')).to.equal(1000);
-    expect(validators.NUMBER('2000', true, 'castable string', 'comman d')).to.equal(2000);
+    expect(validators.NUMBER(1000, 'correct value', false, 'command')).to.equal(1000);
+    expect(validators.NUMBER('2000', 'castable string', true, 'command')).to.equal(2000);
 
     let validationError: Error = null;
 
     try {
 
-      validators.NUMBER('80s', true, 'incorrect value', 'command');
+      validators.NUMBER('80s', 'incorrect value', true, 'command');
 
     }
     catch (error) {
@@ -52,14 +52,14 @@ describe('Validators', function() {
 
   it('should validate booleans', function() {
 
-    expect(validators.BOOLEAN(false, true, 'correct value', 'command')).to.equal(false);
-    expect(validators.BOOLEAN('true', false, 'castable boolean', 'command')).to.equal(true);
+    expect(validators.BOOLEAN(false, 'correct value', true, 'command')).to.equal(false);
+    expect(validators.BOOLEAN('true', 'castable boolean', false, 'command')).to.equal(true);
 
     let validationError: Error = null;
 
     try {
 
-      validators.BOOLEAN(0, false, 'incorrect value', 'command');
+      validators.BOOLEAN(0, 'incorrect value', false, 'command');
 
     }
     catch (error) {
@@ -80,7 +80,7 @@ describe('Validators', function() {
     try {
 
       validationError = null;
-      validators.FILE_PATH('package.json', true, 'file', 'command');
+      validators.FILE_PATH('package.json', 'file', true, 'command');
 
     }
     catch (error) {
@@ -94,7 +94,7 @@ describe('Validators', function() {
     try {
 
       validationError = null;
-      validators.FILE_PATH('this-file-should-not-exist.json', true, 'file', 'command');
+      validators.FILE_PATH('this-file-should-not-exist.json', 'file', true, 'command');
 
     }
     catch (error) {

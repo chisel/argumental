@@ -6,7 +6,7 @@ declare namespace Argumental {
   * @param opts Parsed options for the command.
   * @param cmd The name of the invoked command.
   */
-  type ActionHandler = (args: { [arg: string]: string|number|boolean }, opts: { [opt: string]: string|number|boolean }, cmd: string) => void|Promise<void>;
+  type ActionHandler = (args: { [arg: string]: any }, opts: { [opt: string]: any }, cmd: string) => void|Promise<void>;
 
   /**
   * Argument or option validator.
@@ -14,11 +14,11 @@ declare namespace Argumental {
   * This method may return a promise for async execution.
   * This method may change the value by returning a new one (directly or with promise).
   * @param value The validation target.
-  * @param arg Boolean indicating if the value is an argument or an option.
   * @param name The argument or option name.
+  * @param arg Boolean indicating if the value is an argument or an option.
   * @param cmd Command name.
   */
-  type Validator = (value: any, arg: boolean, name: string, cmd: string) => any;
+  type Validator = (value: any, name: string, arg: boolean, cmd: string) => any;
 
   interface GlobalDeclaration {
 

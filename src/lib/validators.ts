@@ -4,7 +4,7 @@ import path from 'path';
 export class BuiltInValidators {
 
   /** Checks if the value is string. */
-  STRING: Argumental.Validator = (value, arg, name) => {
+  STRING: Argumental.Validator = (value, name, arg) => {
 
     if ( typeof value !== 'string' )
       throw new Error(`Invalid value for ${arg ? 'argument' : 'option'} ${name}!\n   Value must be string.`);
@@ -12,7 +12,7 @@ export class BuiltInValidators {
   };
 
   /** Checks if the value is number or can be converted to number. Casts the value to number if passed. */
-  NUMBER: Argumental.Validator = (value, arg, name) => {
+  NUMBER: Argumental.Validator = (value, name, arg) => {
 
     if ( (typeof value !== 'number' && typeof value !== 'string') || (typeof value === 'string' && ! value.trim().match(/^\d+$/)) )
       throw new Error(`Invalid value for ${arg ? 'argument' : 'option'} ${name}!\n   Value must be a number.`);
@@ -22,7 +22,7 @@ export class BuiltInValidators {
   };
 
   /** Checks if the value is boolean or can be converted to boolean (accepts 'true' and 'false' for conversion). Casts the value to boolean if passed. */
-  BOOLEAN: Argumental.Validator = (value, arg, name) => {
+  BOOLEAN: Argumental.Validator = (value, name, arg) => {
 
     if ( (typeof value !== 'boolean' && typeof value !== 'string') || (typeof value === 'string' && ! ['true', 'false'].includes(value.toLowerCase().trim())) )
       throw new Error(`Invalid value for ${arg ? 'argument' : 'option'} ${name}!\n   Value must be boolean.`);
@@ -32,7 +32,7 @@ export class BuiltInValidators {
   };
 
   /** Checks if the value is a valid file path and the file exists and can be read (relative to current working directory). */
-  FILE_PATH: Argumental.Validator = (value, arg, name) => {
+  FILE_PATH: Argumental.Validator = (value, name, arg) => {
 
     try {
 

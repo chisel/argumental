@@ -132,8 +132,8 @@ Validators are functions that take a user-provided argument value and check it b
 
 Validator functions take the following parameters:
   - ___value___: The argument value in its current state.
-  - ___arg___: A boolean indicating if value belongs to a plain argument or to an option argument.
   - ___name___: The argument name.
+  - ___arg___: A boolean indicating if value belongs to a plain argument or to an option argument.
   - ___cmd___: The name of the invoked command.
 
 ```js
@@ -179,7 +179,7 @@ app
 .parse(process.argv);
 ```
 
-> **NOTE:** Validators won't run when no value is provided for optional arguments.
+> **NOTE:** Validators won't run when no value is provided for optional arguments or if defined on boolean options.
 
 # Tests
 
