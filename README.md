@@ -69,7 +69,7 @@ app
 .argument('<destination_dir>', 'Destination directory path')
 .option('-d --delete', 'Deletes the source file after copying (moving the file)')
 .option('--save-as <filename>', 'A filename to use for the new file')
-.action((args, opts, cmd) => {
+.action(({ args, opts, cmd }) => {
 
   // Example: copy file ./document.md ~/Documents -d --save-as new-document.md
   console.log(args);  // { target: './document.md', destination_dir: '~/Documents' }
@@ -117,11 +117,14 @@ Defines an option for the current command.
 ### action(___handler___)
 
 Defines an action for the current command.
-  - **handler**: An action handler function which takes the following parameters:
+  - **handler**: An action handler function which takes one object as its parameter with the following properties:
     - **args**: A key-value pair object containing the passed-in arguments (uses camel-cased argument names as keys).
     - **opts**: A key-value pair object containing the passed-in options (uses the shorthand and camel-cased option names as keys). If option definition didn't contain an argument, values would be booleans instead. If option defined argument and can occur multiple times, the value would be an array containing each occurrence's value.
     - **suspend**: A function which suspends next action handlers from being executed when called.
     - **cmd**: The invoked command's name.
+    - **data**: An object shared between all action handlers of the same command to pass data around.
+
+> **NOTE**: You can use parameter destructuring to access any properties needed.
 
 ### description(___text___)
 
@@ -182,7 +185,7 @@ Configures Argumental with the given options. Options object can have any of the
   - **colors**: Boolean indicating if logs should be colorful (defaults to `true`).
   - **topLevelPlainHelp**: When true, application help will be displayed when the top-level command is invoked without any arguments or options (defaults to `true`).
   - **help**: A help renderer function to invoke when help must be rendered and logged to console. The function takes the following parameters:
-    - **definitions**: A key-value pair object containing all [command declarations](https://github.com/chisel/argumental/blob/master/typings.d.ts#L35) where key `''` refers to the top-level command.
+    - **definitions**: A key-value pair object containing all [command declarations](https://github.com/chisel/argumental/blob/master/typings.d.ts#L47) where key `''` refers to the top-level command.
     - **cmd**: The invoked command name.
 
 ### STRING
@@ -210,12 +213,12 @@ app
 .command('command1')
 .argument('[arg1]')               // Defined for command1
 .option('--option1')              // Defined for command1
-.action((args, opts, cmd) => { }) // Defined for command1
+.action(params => { })            // Defined for command1
 // Changing context
 .command('command2')
 .argument('[arg2]')               // Defined for command2
 .alias('c2')                      // Defined for command2
-.action((args, opts, cmd) => { }) // Defined for command2
+.action(params => { })            // Defined for command2
 .parse(process.argv);
 ```
 
@@ -226,7 +229,7 @@ The following defines **app &lt;arg1&gt; --force** (considering application name
 app
 .argument('<arg1>')
 .option('--force')
-.action((args, opts, cmd) => { })
+.action(params => { })
 .parse(process.argv);
 ```
 
@@ -242,16 +245,16 @@ app
 // Define for all commands
 .option('--silent', 'Disables logs produced by this command')
 .command('command1')
-.action((args, opts) => {
+.action(({ opts }) => {
   if ( ! opts.silent ) console.log('command1 used');
 })
 .command('command2')
-.action((args, opts) => {
+.action(({ opts }) => {
   if ( ! opts.silent ) console.log('command2 used');
 })
 .global
 // Perform after all commands
-.action((args, opts, cmd) => {
+.action(({ opts, cmd }) => {
   if ( ! opts.silent ) console.log(`command ${cmd} has finished`);
 })
 .parse(process.argv);

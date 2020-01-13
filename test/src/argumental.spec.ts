@@ -551,27 +551,27 @@ describe('App', function() {
     expect(values.shift()).to.equal(50);
     expect(values).to.be.empty;
 
-    let actionArgs: any[] = [];
-    app.action((...args) => {actionArgs = [...args]});
+    let actionArgs: Argumental.ActionHandlerParams;
+    app.action(params => {actionArgs = params});
 
     await app.parse(['node', 'test', 'test', '-n', '50', '--logs', 'silent']);
 
-    expect(actionArgs[0]).to.deep.equal({});
-    expect(actionArgs[1]).to.deep.equal({
+    expect(actionArgs.args).to.deep.equal({});
+    expect(actionArgs.opts).to.deep.equal({
       help: false,
       n: 50,
       logs: 'SILENT',
       p: undefined,
       port: undefined
     });
-    expect(actionArgs[2]).to.equal('test');
+    expect(actionArgs.cmd).to.equal('test');
 
   });
 
   it('should apply defaults correctly', async function() {
 
     const app = new ArgumentalApp();
-    let args: any, opts: any;
+    let _args: any, _opts: any;
 
     await app
     .version('1.0.2')
@@ -583,19 +583,19 @@ describe('App', function() {
     .option('-l', null, false, null, false, true)
     .option('--log [level]', null, false, null, false, 'silent')
     .option('--error [code]', null, true, app.NUMBER, true, 0)
-    .action((a, o) => {
-      args = a;
-      opts = o;
+    .action(({ args, opts }) => {
+      _args = args;
+      _opts = opts;
     })
     .parse(['node', 'test', 'test', 'false', 'provided', '--log', 'verbose', '--error', '--error', '1']);
 
-    expect(args).to.deep.equal({
+    expect(_args).to.deep.equal({
       arg1: false,
       arg2: 'provided',
       arg3: 'def3'
     });
 
-    expect(opts).to.deep.equal({
+    expect(_opts).to.deep.equal({
       help: false,
       l: false,
       log: 'verbose',
@@ -621,7 +621,7 @@ describe('App', function() {
     app
     .config({ topLevelPlainHelp: false })
     .option('-v --version')
-    .action((args, opts, cmd, suspend) => {
+    .action(({ opts, suspend }) => {
 
       if ( opts.version ) {
 
@@ -631,7 +631,7 @@ describe('App', function() {
       }
 
     })
-    .action((args, opts, cmd, suspend) => {
+    .action(({ opts, suspend }) => {
 
       if ( opts.test ) {
 
@@ -928,7 +928,7 @@ describe('App', function() {
     .option('-s')
     .required(true)
     .argument('<arg>')
-    .action((args, opts, cmd) => { parsed = {args, opts, cmd}; });
+    .action(({ args, opts, cmd }) => { parsed = {args, opts, cmd}; });
 
     await app.parse(['node', 'test', '-i']);
 

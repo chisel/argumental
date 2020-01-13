@@ -2,12 +2,24 @@ declare namespace Argumental {
 
   /**
   * Action handler.
-  * @param args Parsed arguments for the command.
-  * @param opts Parsed options for the command.
-  * @param cmd The name of the invoked command.
-  * @param suspend Suspends next actions handlers (if any).
+  * @param params Action handler parameters object.
   */
-  type ActionHandler = (args: { [arg: string]: any }, opts: { [opt: string]: any }, cmd: string, suspend: () => void) => void|Promise<void>;
+  type ActionHandler<T=any> = (params: ActionHandlerParams<T>) => void|Promise<void>;
+
+  interface ActionHandlerParams<T=any> {
+
+    /** Parsed arguments for the command. */
+    args: List<any>;
+    /** Parsed options for the command. */
+    opts: List<any>;
+    /** The name of the invoked command. */
+    cmd: string;
+    /** Suspends next actions handlers (if any). */
+    suspend: () => void;
+    /** An object shared between action handlers to attach any data to. */
+    data: T;
+
+  }
 
   /**
   * Argument or option validator.

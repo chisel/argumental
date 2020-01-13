@@ -12,7 +12,7 @@ export class ArgumentalApp extends BuiltInValidators {
 
     // Define --help top-level
     this._commands[''].options.push(this._parser.parseOption('--help', 'displays application help', false, null, false, undefined, true));
-    this._commands[''].actions.push((args, opts, cmd, suspend) => {
+    this._commands[''].actions.push(({ opts, suspend }) => {
 
       if ( opts.help ) {
 
@@ -25,7 +25,7 @@ export class ArgumentalApp extends BuiltInValidators {
 
     // Define --help on all levels
     this._globalDeclaration.options.push(this._parser.parseOption('--help', 'displays command help', false, null, false, undefined, true));
-    this._globalDeclaration.actions.push((args, opts, cmd, suspend) => {
+    this._globalDeclaration.actions.push(({ opts, cmd, suspend }) => {
 
       if ( ! opts.help ) return;
 
@@ -102,7 +102,7 @@ export class ArgumentalApp extends BuiltInValidators {
     this._version = version.trim();
 
     this._commands[''].options.push(this._parser.parseOption('-v --version', 'displays application version', false, null, false, undefined, true));
-    this._commands[''].actions.push((args, opts, cmd, suspend) => {
+    this._commands[''].actions.push(({ opts, suspend }) => {
 
       if ( opts.version ) {
 
@@ -532,7 +532,7 @@ export class ArgumentalApp extends BuiltInValidators {
   * Mounts an action middleware to the current command (or globally).
   * @param middleware The action middleware to mount.
   */
-  public action(handler: Argumental.ActionHandler): ArgumentalApp {
+  public action<T=any>(handler: Argumental.ActionHandler<T>): ArgumentalApp {
 
     // Check if no command is being declared and global flag is not set
     if ( this._currentCommand === null && ! this._global )
@@ -974,6 +974,8 @@ export class ArgumentalApp extends BuiltInValidators {
 
     }
 
+    const actionHandlerData: any = {};
+
     // Run action handlers
     for ( const action of command.actions ) {
 
@@ -981,7 +983,13 @@ export class ArgumentalApp extends BuiltInValidators {
 
       try {
 
-        await action(parsed.args, parsed.opts, parsed.cmd, () => { suspended = true });
+        await action({
+          args: parsed.args,
+          opts: parsed.opts,
+          cmd: parsed.cmd,
+          suspend: () => { suspended = true },
+          data: actionHandlerData
+        });
 
       }
       catch (error) {
