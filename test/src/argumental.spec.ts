@@ -283,6 +283,16 @@ describe('App', function() {
     .command('convert')
     .argument('<amount>', 'The money amount in dollars (e.g. $100)', [
       /^\$\d+$/,
+      (value: string, name, arg, cmd, suspend) => {
+
+        if ( value === '$13' ) {
+
+          converted.push(value);
+          suspend();
+
+        }
+
+      },
       (value: string) => {
 
         const num = +value.match(/^\$(\d+)$/)[1];
@@ -311,6 +321,12 @@ describe('App', function() {
 
     expect(errors.shift()).to.equal('Invalid value for argument amount!');
     expect(errors).to.be.empty;
+    expect(converted).to.be.empty;
+
+    await app.parse(['node', 'test', 'convert', '$13']);
+
+    expect(errors).to.be.empty;
+    expect(converted.shift()).to.equal('$13');
     expect(converted).to.be.empty;
 
   });
@@ -487,6 +503,160 @@ describe('App', function() {
 
     expect(errors.shift()).to.equal('Unknown command!');
     expect(errors).to.be.empty;
+
+  });
+
+  it('should define app correctly using helper functions', async function() {
+
+    const app = new ArgumentalApp();
+    const actionHandler = () => { };
+    const sanitizer = value => value.toLowerCase();
+    const validator = /ts|js/;
+
+    // Top-level
+    app.top
+    .description('Top-level description')
+    .option('-t [val]')
+    .description('Top-level option')
+    .required(true)
+    .multi(true)
+    .default(false)
+    .validate(validators.BOOLEAN)
+    .action(actionHandler);
+
+    // Global declarations
+    app.global
+    .argument('[script_type]')
+    .description('Script type')
+    .sanitize(sanitizer)
+    .validate(validator)
+    .default('ts');
+
+    // Command: test
+    app
+    .command('test', 'blah')
+    .description('Test command')
+    .argument('<path>')
+    .description('Script path')
+    .option('-l')
+    .required(true)
+    .action(actionHandler);
+
+    // Command: test2
+    app
+    .command('test2')
+    .alias('t2')
+    .description('Test 2 command')
+    .option('-p --port <number>')
+    .description('Port')
+    .sanitize(validators.NUMBER)
+    .action(actionHandler);
+
+    const commands = (<any>app)._commands;
+
+    expect(commands['']).to.deep.equal({
+      name: '',
+      description: 'Top-level description',
+      aliases: [],
+      options: [
+        {
+          shortName: null,
+          longName: 'help',
+          apiName: 'help',
+          description: 'displays application help',
+          required: false,
+          multi: false,
+          argument: null
+        },
+        {
+          shortName: 't',
+          longName: null,
+          apiName: null,
+          description: 'Top-level option',
+          required: true,
+          multi: true,
+          argument: {
+            name: 'val',
+            apiName: 'val',
+            required: false,
+            default: false,
+            validators: [validators.BOOLEAN]
+          }
+        }
+      ],
+      arguments: [],
+      actions: [(<any>app)._commands[''].actions[0], actionHandler]
+    });
+
+    expect(commands.test).to.deep.equal({
+      name: 'test',
+      description: 'Test command',
+      aliases: [],
+      options: [
+        {
+          shortName: 'l',
+          longName: null,
+          apiName: null,
+          description: null,
+          required: true,
+          multi: false,
+          argument: null
+        }
+      ],
+      arguments: [
+        {
+          name: 'script_type',
+          apiName: 'scriptType',
+          required: false,
+          description: 'Script type',
+          default: 'ts',
+          validators: [sanitizer, validator]
+        },
+        {
+          name: 'path',
+          apiName: 'path',
+          required: true,
+          description: 'Script path',
+          default: undefined,
+          validators: []
+        }
+      ],
+      actions: [actionHandler]
+    });
+
+    expect(commands.test2).to.deep.equal({
+      name: 'test2',
+      aliases: ['t2'],
+      description: 'Test 2 command',
+      options: [
+        {
+          shortName: 'p',
+          longName: 'port',
+          apiName: 'port',
+          required: false,
+          description: 'Port',
+          multi: false,
+          argument: {
+            name: 'number',
+            apiName: 'number',
+            required: true,
+            default: undefined,
+            validators: [validators.NUMBER]
+          }
+        }
+      ],
+      arguments: [
+        {
+          name: 'script_type',
+          apiName: 'scriptType',
+          required: false,
+          description: 'Script type',
+          default: 'ts',
+          validators: [sanitizer, validator]
+        }
+      ],
+      actions: [actionHandler]
+    });
 
   });
 

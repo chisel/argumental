@@ -44,6 +44,8 @@ export class ArgumentalApp {
   };
   /** Current command declaration. */
   private _currentCommand: string = '';
+  /** Current component type of the current command. */
+  private _currentComponent: 'arguments'|'options' = null;
   /** List of all command names and aliases for quick conflict checks. */
   private _conflicts: string[] = [];
   /** Application version. */
@@ -85,7 +87,10 @@ export class ArgumentalApp {
   */
   public get global(): ArgumentalApp {
 
+    // Set the global flag
     this._global = true;
+    // Reset the current component
+    this._currentComponent = null;
 
     return this;
 
@@ -96,8 +101,270 @@ export class ArgumentalApp {
   */
   public get top(): ArgumentalApp {
 
+    // Reset the global flag
     this._global = false;
+    // Reset the current component
+    this._currentComponent = null;
+    // Set the current command to top-level
     this._currentCommand = '';
+
+    return this;
+
+  }
+
+  /**
+  * Sets the description for a command, option, or argument.
+  * @param text The description text to display in help.
+  */
+  public description(text: string): ArgumentalApp {
+
+    // Check if current component is not set, set for current command
+    if ( ! this._currentComponent && ! this._global ) {
+
+      this._commands[this._currentCommand].description = text;
+
+    }
+    // If global but no component selected
+    else if ( this._global && ! this._currentComponent ) {
+
+      throw new Error('ARGUMENTAL_ERROR: Cannot set description on the global context because no command, option, or argument is selected!');
+
+    }
+    else {
+
+      // If global
+      if ( this._global ) {
+
+        // Set for all commands' components (last component)
+        for ( const commandName in this._commands ) {
+
+          if ( commandName === '' ) continue;
+
+          const component = this._commands[commandName][this._currentComponent];
+
+          component[component.length - 1].description = text;
+
+        }
+
+        // Update global declaration
+        const component = this._globalDeclaration[this._currentComponent];
+
+        component[component.length - 1].description = text;
+
+      }
+      // Specific component
+      else {
+
+        const component = this._commands[this._currentCommand][this._currentComponent];
+
+        component[component.length - 1].description = text;
+
+      }
+
+    }
+
+    return this;
+
+  }
+
+  /**
+  * Sets the required flag on an option.
+  * @param value The required flag value.
+  */
+  public required(value: boolean): ArgumentalApp {
+
+    // If no component selected
+    if ( this._currentComponent !== 'options' )
+      throw new Error(`ARGUMENTAL_ERROR: Cannot set the required flag because no option is selected!`);
+
+    // If global
+    if ( this._global ) {
+
+      // Set for all options
+      for ( const commandName in this._commands ) {
+
+        if ( commandName === '' ) continue;
+
+        const component = this._commands[commandName].options;
+
+        component[component.length - 1].required = value;
+
+      }
+
+      // Update global declaration
+      const component = this._globalDeclaration.options;
+
+      component[component.length - 1].required = value;
+
+    }
+    // Specific component
+    else {
+
+      const component = this._commands[this._currentCommand].options;
+
+      component[component.length - 1].required = value;
+
+    }
+
+    return this;
+
+  }
+
+  /**
+  * Sets the multi flag on an option.
+  * @param value The multi flag value.
+  */
+  public multi(value: boolean): ArgumentalApp {
+
+    // If no component selected
+    if ( this._currentComponent !== 'options' )
+      throw new Error(`ARGUMENTAL_ERROR: Cannot set the multi flag because no option is selected!`);
+
+    // If global
+    if ( this._global ) {
+
+      // Set for all options
+      for ( const commandName in this._commands ) {
+
+        if ( commandName === '' ) continue;
+
+        const component = this._commands[commandName].options;
+
+        component[component.length - 1].multi = value;
+
+      }
+
+      // Update global declaration
+      const component = this._globalDeclaration.options;
+
+      component[component.length - 1].multi = value;
+
+    }
+    // Specific component
+    else {
+
+      const component = this._commands[this._currentCommand].options;
+
+      component[component.length - 1].multi = value;
+
+    }
+
+    return this;
+
+  }
+
+  /**
+  * Sets the default value for an option or an argument.
+  * @param value The default value.
+  */
+  public default(value: any): ArgumentalApp {
+
+    // If no component selected
+    if ( ! this._currentComponent )
+      throw new Error(`ARGUMENTAL_ERROR: Cannot set the default value because no option or argument is selected!`);
+
+    // If global
+    if ( this._global ) {
+
+      // Set for all options or arguments
+      for ( const commandName in this._commands ) {
+
+        if ( commandName === '' ) continue;
+
+        const component = this._commands[commandName][this._currentComponent];
+
+        if ( this._currentComponent === 'arguments' )
+          (<Argumental.CommandArgumentDeclaration>component[component.length - 1]).default = value;
+        else
+          (<Argumental.OptionDeclaration>component[component.length - 1]).argument.default = value;
+
+      }
+
+      // Update global declaration
+      const component = this._globalDeclaration[this._currentComponent];
+
+      if ( this._currentComponent === 'arguments' )
+        (<Argumental.CommandArgumentDeclaration>component[component.length - 1]).default = value;
+      else
+        (<Argumental.OptionDeclaration>component[component.length - 1]).argument.default = value;
+
+    }
+    // Specific component
+    else {
+
+      const component = this._commands[this._currentCommand][this._currentComponent];
+
+      if ( this._currentComponent === 'arguments' )
+        (<Argumental.CommandArgumentDeclaration>component[component.length - 1]).default = value;
+      else
+        (<Argumental.OptionDeclaration>component[component.length - 1]).argument.default = value;
+
+    }
+
+    return this;
+
+  }
+
+  /**
+  * Sets validators for an option or an argument.
+  * @param validators A single or an array of validators.
+  */
+  public validate(validators: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>): ArgumentalApp {
+
+    // If no component selected
+    if ( ! this._currentComponent )
+      throw new Error(`ARGUMENTAL_ERROR: Cannot set validators because no option or argument is selected!`);
+
+    // If global
+    if ( this._global ) {
+
+      // Set for all options and arguments
+      for ( const commandName in this._commands ) {
+
+        if ( commandName === '' ) continue;
+
+        const component = this._commands[commandName][this._currentComponent];
+
+        if ( this._currentComponent === 'arguments' )
+          (<Argumental.CommandArgumentDeclaration>component[component.length - 1]).validators = (<Argumental.CommandArgumentDeclaration>component[component.length - 1]).validators.concat(validators);
+        else
+          (<Argumental.OptionDeclaration>component[component.length - 1]).argument.validators = (<Argumental.OptionDeclaration>component[component.length - 1]).argument.validators.concat(validators);
+
+      }
+
+      // Update global declaration
+      const component = this._globalDeclaration[this._currentComponent];
+
+      if ( this._currentComponent === 'arguments' )
+        (<Argumental.CommandArgumentDeclaration>component[component.length - 1]).validators = (<Argumental.CommandArgumentDeclaration>component[component.length - 1]).validators.concat(validators);
+      else
+        (<Argumental.OptionDeclaration>component[component.length - 1]).argument.validators = (<Argumental.OptionDeclaration>component[component.length - 1]).argument.validators.concat(validators);
+
+
+
+    }
+    // Specific component
+    else {
+
+      const component = this._commands[this._currentCommand][this._currentComponent];
+
+      if ( this._currentComponent === 'arguments' )
+        (<Argumental.CommandArgumentDeclaration>component[component.length - 1]).validators = (<Argumental.CommandArgumentDeclaration>component[component.length - 1]).validators.concat(validators);
+      else
+        (<Argumental.OptionDeclaration>component[component.length - 1]).argument.validators = (<Argumental.OptionDeclaration>component[component.length - 1]).argument.validators.concat(validators);
+
+    }
+
+    return this;
+
+  }
+
+  /**
+  * Alias for <code>validate()</code>
+  */
+  public sanitize(sanitizers: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>): ArgumentalApp {
+
+    this.validate(sanitizers);
 
     return this;
 
@@ -126,6 +393,8 @@ export class ArgumentalApp {
 
     // Reset the global flag
     this._global = false;
+    // Reset the current component
+    this._currentComponent = null;
     // Set the current command pointer
     this._currentCommand = name.trim();
 
@@ -263,6 +532,9 @@ export class ArgumentalApp {
 
     }
 
+    // Update current component
+    this._currentComponent = 'arguments';
+
     return this;
 
   }
@@ -317,6 +589,9 @@ export class ArgumentalApp {
       this._commands[this._currentCommand].options.push(option);
 
     }
+
+    // Update current component
+    this._currentComponent = 'options';
 
     return this;
 
@@ -406,9 +681,11 @@ export class ArgumentalApp {
         }
 
         // Validator function
+        let suspended = false;
+
         try {
 
-          const newValue = await (<Argumental.Validator>validator)(parsed.args[argument.apiName], argument.name, true, parsed.cmd);
+          const newValue = await (<Argumental.Validator>validator)(parsed.args[argument.apiName], argument.name, true, parsed.cmd, () => { suspended = true; });
 
           // Update the value
           if ( newValue !== undefined ) parsed.args[argument.apiName] = newValue;
@@ -419,6 +696,8 @@ export class ArgumentalApp {
           return this._log.error(error.message);
 
         }
+
+        if ( suspended ) break;
 
       }
 
@@ -467,9 +746,11 @@ export class ArgumentalApp {
           }
 
           // Validator function
+          let suspended = false;
+
           try {
 
-            const newValue = await (<Argumental.Validator>validator)(value, option.longName || option.shortName, false, parsed.cmd);
+            const newValue = await (<Argumental.Validator>validator)(value, option.longName || option.shortName, false, parsed.cmd, () => { suspended = true; });
 
             // Update the value
             if ( newValue !== undefined ) (<Array<string>>parsed.opts[apiName])[i] = (value = newValue);
@@ -480,6 +761,8 @@ export class ArgumentalApp {
             return this._log.error(error.message);
 
           }
+
+          if ( suspended ) break;
 
         }
 
@@ -527,11 +810,11 @@ export class ArgumentalApp {
     // Run action handlers
     for ( const action of command.actions ) {
 
-      let suspend = false;
+      let suspended = false;
 
       try {
 
-        await action(parsed.args, parsed.opts, parsed.cmd, () => { suspend = true });
+        await action(parsed.args, parsed.opts, parsed.cmd, () => { suspended = true });
 
       }
       catch (error) {
@@ -540,7 +823,7 @@ export class ArgumentalApp {
 
       }
 
-      if ( suspend ) break;
+      if ( suspended ) break;
 
     }
 

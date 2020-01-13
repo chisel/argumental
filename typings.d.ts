@@ -19,7 +19,7 @@ declare namespace Argumental {
   * @param arg Boolean indicating if the value is an argument or an option.
   * @param cmd Command name.
   */
-  type Validator = (value: any, name: string, arg: boolean, cmd: string) => any;
+  type Validator = (value: any, name: string, arg: boolean, cmd: string, suspend: () => void) => any;
 
   interface GlobalDeclaration {
 
