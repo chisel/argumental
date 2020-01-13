@@ -70,6 +70,8 @@ export class ArgumentalApp extends BuiltInValidators {
   private _parser = new Parser();
   /** Logger. */
   private _log = new Logger();
+  /** Flags for displaying help without the --help option for plain top-level command. */
+  private _topLevelPlainHelp: boolean = true;
 
   /**
   * Configures Argumental with the provided options.
@@ -79,10 +81,12 @@ export class ArgumentalApp extends BuiltInValidators {
 
     // Set defaults
     if ( ! options.hasOwnProperty('colors') ) options.colors = true;
+    if ( ! options.hasOwnProperty('topLevelPlainHelp') ) options.topLevelPlainHelp = true;
     if ( ! options.hasOwnProperty('help') ) options.help = null;
 
     // Apply config
     this._log.colors = options.colors;
+    this._topLevelPlainHelp = options.topLevelPlainHelp;
     this._log.customHelpRenderer = options.help;
 
     return this;
@@ -685,6 +689,13 @@ export class ArgumentalApp extends BuiltInValidators {
 
     if ( appPath ) this._name = path.basename(appPath);
     this._log.appName = this._name;
+
+    // Display help for plain top-level argv
+    if ( argv.length === 2 && this._topLevelPlainHelp ) {
+
+      return this._log.help(this._commands, '');
+
+    }
 
     // Parse arguments
     const parsed = this._parser.parseCliArguments(argv.slice(2), this._commands);

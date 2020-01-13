@@ -115,6 +115,8 @@ declare namespace Argumental {
 
     /** Controls logs colors (default: true). */
     colors?: boolean;
+    /** Display help when top-level command was invoked without any arguments or options. */
+    topLevelPlainHelp?: boolean;
     /** Custom help renderer function to run instead of the built-in help renderer (default: null). */
     help?: (definitions: List<CommandDeclaration>, cmd: string) => void;
 

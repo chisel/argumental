@@ -619,6 +619,7 @@ describe('App', function() {
     };
 
     app
+    .config({ topLevelPlainHelp: false })
     .option('-v --version')
     .action((args, opts, cmd, suspend) => {
 
