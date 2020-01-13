@@ -13,10 +13,21 @@ export class ArgumentalApp {
 
       if ( opts.help ) {
 
-        this._log.help();
+        this._log.help(this._commands, '');
         suspend();
 
       }
+
+    });
+
+    // Define --help on all levels
+    this._globalDeclaration.options.push(this._parser.parseOption('--help', 'displays command help'));
+    this._globalDeclaration.actions.push((args, opts, cmd, suspend) => {
+
+      if ( ! opts.help ) return;
+
+      this._log.help(this._commands, cmd);
+      suspend();
 
     });
 
@@ -508,7 +519,7 @@ export class ArgumentalApp {
     // Check if argument is already defined for current command or globally
     if (
       (this._global && this._globalDeclaration.arguments.filter(arg => arg.apiName === argument.apiName).length) ||
-      (this._currentCommand && this._commands[this._currentCommand].arguments.filter(arg => arg.apiName === argument.apiName).length)
+      (this._currentCommand !== null && this._commands[this._currentCommand].arguments.filter(arg => arg.apiName === argument.apiName).length)
     )
       throw new Error(`ARGUMENTAL_ERROR: Argument ${argument.apiName} is already defined!`);
 
@@ -566,7 +577,7 @@ export class ArgumentalApp {
     // Check if option is already defined for current command or globally
     if (
       (this._global && this._globalDeclaration.options.filter(opt => (opt.longName && opt.longName === option.longName) || (opt.shortName && option.shortName === opt.shortName) || (opt.apiName && opt.apiName === option.apiName)).length) ||
-      (this._currentCommand && this._commands[this._currentCommand].options.filter(opt => (opt.longName && opt.longName === option.longName) || (opt.shortName && option.shortName === opt.shortName) || (opt.apiName && opt.apiName === option.apiName)).length)
+      (this._currentCommand !== null && this._commands[this._currentCommand].options.filter(opt => (opt.longName && opt.longName === option.longName) || (opt.shortName && option.shortName === opt.shortName) || (opt.apiName && opt.apiName === option.apiName)).length)
     )
       throw new Error(`ARGUMENTAL_ERROR: Option ${option.longName || option.shortName} is already defined!`);
 

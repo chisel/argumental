@@ -36,7 +36,7 @@ describe('App', function() {
     expect(newScriptCommand.name).to.equal('script new');
     expect(newScriptCommand.description).to.equal('Uploads a new script');
     expect(newScriptCommand.aliases).to.deep.equal(['newScript', 'sn']);
-    expect(newScriptCommand.actions.length).to.equal(4);
+    expect(newScriptCommand.actions.length).to.equal(5);
 
     expect(newScriptCommand.arguments).to.deep.equal([
       {
@@ -66,6 +66,15 @@ describe('App', function() {
     ]);
 
     expect(newScriptCommand.options).to.deep.equal([
+      {
+        shortName: null,
+        longName: 'help',
+        apiName: 'help',
+        description: 'displays command help',
+        required: false,
+        multi: false,
+        argument: null
+      },
       {
         shortName: 'l',
         longName: 'log',
@@ -121,6 +130,163 @@ describe('App', function() {
         }
       }
     ]);
+
+  });
+
+  it('should report definition errors correctly', async function() {
+
+    let defError: Error;
+
+    try {
+
+      new ArgumentalApp()
+      .command('test')
+      .command('test');
+
+    }
+    catch (error) {
+
+      defError = error;
+
+    }
+
+    expect(defError).not.to.be.undefined;
+    expect(defError.message).to.equal('ARGUMENTAL_ERROR: Command test is already defined!');
+
+    try {
+
+      new ArgumentalApp()
+      .command('test')
+      .argument('<arg1>')
+      .argument('<arg1>');
+
+    }
+    catch (error) {
+
+      defError = error;
+
+    }
+
+    expect(defError).not.to.be.undefined;
+    expect(defError.message).to.equal('ARGUMENTAL_ERROR: Argument arg1 is already defined!');
+
+    try {
+
+      new ArgumentalApp()
+      .argument('<arg1>')
+      .argument('<arg1>');
+
+    }
+    catch (error) {
+
+      defError = error;
+
+    }
+
+    expect(defError).not.to.be.undefined;
+    expect(defError.message).to.equal('ARGUMENTAL_ERROR: Argument arg1 is already defined!');
+
+    try {
+
+      new ArgumentalApp()
+      .global
+      .argument('<arg1>')
+      .command('test')
+      .argument('<arg1>');
+
+    }
+    catch (error) {
+
+      defError = error;
+
+    }
+
+    expect(defError).not.to.be.undefined;
+    expect(defError.message).to.equal('ARGUMENTAL_ERROR: Argument arg1 is already defined!');
+
+    try {
+
+      new ArgumentalApp()
+      .option('-l')
+      .option('-l');
+
+    }
+    catch (error) {
+
+      defError = error;
+
+    }
+
+    expect(defError).not.to.be.undefined;
+    expect(defError.message).to.equal('ARGUMENTAL_ERROR: Option l is already defined!');
+
+    try {
+
+      new ArgumentalApp()
+      .global
+      .option('-l')
+      .command('test')
+      .option('-l');
+
+    }
+    catch (error) {
+
+      defError = error;
+
+    }
+
+    expect(defError).not.to.be.undefined;
+    expect(defError.message).to.equal('ARGUMENTAL_ERROR: Option l is already defined!');
+
+    try {
+
+      new ArgumentalApp()
+      .global
+      .alias('s')
+
+    }
+    catch (error) {
+
+      defError = error;
+
+    }
+
+    expect(defError).not.to.be.undefined;
+    expect(defError.message).to.equal('ARGUMENTAL_ERROR: Cannot define alias globally!');
+
+    try {
+
+      new ArgumentalApp()
+      .command('blah')
+      .alias('b')
+      .command('b')
+
+    }
+    catch (error) {
+
+      defError = error;
+
+    }
+
+    expect(defError).not.to.be.undefined;
+    expect(defError.message).to.equal('ARGUMENTAL_ERROR: Cannot define command b because it conflicts with a command or alias of the same name!');
+
+    try {
+
+      new ArgumentalApp()
+      .command('blah')
+      .alias('bla')
+      .alias('blah')
+
+    }
+    catch (error) {
+
+      defError = error;
+
+    }
+
+    expect(defError).not.to.be.undefined;
+    expect(defError.message).to.equal('ARGUMENTAL_ERROR: Cannot define alias blah because it conflicts with a command or alias of the same name!');
 
   });
 
@@ -390,6 +556,7 @@ describe('App', function() {
 
     expect(actionArgs[0]).to.deep.equal({});
     expect(actionArgs[1]).to.deep.equal({
+      help: false,
       n: 50,
       logs: 'SILENT',
       p: undefined,
@@ -406,7 +573,6 @@ describe('App', function() {
 
     await app
     .version('1.0.2')
-    .option('--kir')
     .argument('<ehem>')
     .command('test')
     .argument('<arg1>', null, validators.BOOLEAN, true)
@@ -428,6 +594,7 @@ describe('App', function() {
     });
 
     expect(opts).to.deep.equal({
+      help: false,
       l: false,
       log: 'verbose',
       error: [0, 1]
@@ -594,6 +761,15 @@ describe('App', function() {
       aliases: [],
       options: [
         {
+          shortName: null,
+          longName: 'help',
+          apiName: 'help',
+          description: 'displays command help',
+          required: false,
+          multi: false,
+          argument: null
+        },
+        {
           shortName: 'l',
           longName: null,
           apiName: null,
@@ -621,7 +797,7 @@ describe('App', function() {
           validators: []
         }
       ],
-      actions: [actionHandler]
+      actions: [(<any>app)._commands['test'].actions[0], actionHandler]
     });
 
     expect(commands.test2).to.deep.equal({
@@ -629,6 +805,15 @@ describe('App', function() {
       aliases: ['t2'],
       description: 'Test 2 command',
       options: [
+        {
+          shortName: null,
+          longName: 'help',
+          apiName: 'help',
+          description: 'displays command help',
+          required: false,
+          multi: false,
+          argument: null
+        },
         {
           shortName: 'p',
           longName: 'port',
@@ -655,7 +840,7 @@ describe('App', function() {
           validators: [sanitizer, validator]
         }
       ],
-      actions: [actionHandler]
+      actions: [(<any>app)._commands['test2'].actions[0], actionHandler]
     });
 
   });
