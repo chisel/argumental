@@ -50,18 +50,18 @@ app
 
 Argumental provides a [chainable API](#chaining-and-context) to define the whole application in one go. Once imported, the following methods are available on the app object and all methods return a reference to the parent object for chaining (except for `parse()` and the built-in validators):
 
-#### command(___name___, ___description___)
+### command(___name___, ___description___)
 
 Defines a command.
   - ___name___: The command name. Can only contain alphanumeric characters and nonconsecutive spaces.
   - ___description___: `Optional` A description to display in application help.
 
-#### alias(___name___)
+### alias(___name___)
 
 Defines an alias for the current command.
   - ___name___: The command alias name. Can only contain alphanumeric characters and spaces.
 
-#### argument(___syntax___, ___description___, ___validators___, ___defaultValue___)
+### argument(___syntax___, ___description___, ___validators___, ___defaultValue___)
 
 Defines an argument for the current command.
   - ___syntax___: The argument syntax. Use `<>` for required arguments and `[]` for optional arguments (e.g. `<file_path>`). Argument name can only contain alphanumeric characters, `-`s, and `_`s.
@@ -69,7 +69,7 @@ Defines an argument for the current command.
   - ___validators___: `Optional` A single or an array of [validators](#validation) to validate the argument value.
   - ___defaultValue___: `Optional` The default value of the argument if value was not provided (only works with optional arguments).
 
-#### option(___syntax___, ___description___, ___required___, ___validators___, ___multi___, ___defaultValue___)
+### option(___syntax___, ___description___, ___required___, ___validators___, ___multi___, ___defaultValue___)
 
 Defines an option for the current command.
   - ___syntax___: The option syntax. You can define a one letter shorthand (e.g. `-p`), an option name (e.g. `--port-number`), and one argument (e.g. `<port_number>`) in the syntax (e.g. `-p --port-number <port_number>`). Option name can only contain alphanumeric characters and `-`s.
@@ -79,7 +79,7 @@ Defines an option for the current command.
   - ___multi___: `Optional` Indicates whether this option can be repeated more than once (only practical for options with argument).
   - ___defaultValue___: `Optional` The default value of the argument if value was not provided (only applies to options with an optional argument, e.g. `--option [argument]`).
 
-#### action(___handler___)
+### action(___handler___)
 
 Defines an action for the current command.
   - ___handler___: An action handler function which takes the following parameters:
@@ -88,68 +88,68 @@ Defines an action for the current command.
     - **suspend**: A function which suspends next action handlers from being executed when called.
     - **cmd**: The invoked command's name.
 
-#### description(___text___)
+### description(___text___)
 
 Defines description for the current command, argument, or option.
   - ___text___: Description text to display in application help.
 
-#### required(___value___)
+### required(___value___)
 
 Sets the required flag for the current option.
   - ___value___: Required flag's boolean value.
 
-#### multi(___value___)
+### multi(___value___)
 
 Sets the multi flag for the current option.
   - ___value___: Multi flag's boolean value.
 
 
-#### default(___value___)
+### default(___value___)
 
 Sets default value for the current argument or option (only applies to optional arguments).
   - ___value___: The default value to set.
 
-#### validate(___validators___)
+### validate(___validators___)
 
 Adds a single or multiple [validators](#validation) to the current option or argument.
   - ___validators___: A single or an array of [validators](#validation) to add.
 
-#### sanitize(___sanitizers___)
+### sanitize(___sanitizers___)
 
 Alias for `validate()`.
   - ___sanitizers___: A single or an array of [validators](#validation) to add.
 
-#### version(___version___)
+### version(___version___)
 
 Sets the application version.
   - ___version___: The version of the application.
 
-#### parse(___argv___)
+### parse(___argv___)
 
 Parses the passed in array of command-line arguments (e.g. `process.argv`) and ends the chain by returning a void promise which always resolves.
   - ___argv___: Command-line arguments to parse.
 
-#### global
+### global
 
 Turns [global declaration](#chaining-and-context) on within the chain. Any calls to `argument()`, `option()`, and `action()` methods would define globals instead until context is changed.
 
-#### top
+### top
 
 Turns [top-level declaration](#chaining-and-context) on within the chain. Any calls to `argument()`, `option()`, and `action()` methods would define on top-level instead until context is changed.
 
-#### STRING
+### STRING
 
 Built-in [validator](#validation) which validates the argument value as string.
 
-#### NUMBER
+### NUMBER
 
 Built-in [validator](#validation) which validates the argument value as a number (also converts the input to number).
 
-#### BOOLEAN
+### BOOLEAN
 
 Built-in [validator](#validation) which validates the argument value as boolean (also converts the input to boolean).
 
-#### FILE_PATH
+### FILE_PATH
 
 Built-in [validator](#validation) which validates the argument value as a file path (checks for file existence and read access synchronously).
 
