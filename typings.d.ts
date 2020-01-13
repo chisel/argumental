@@ -87,4 +87,13 @@ declare namespace Argumental {
 
   }
 
+  interface Options {
+
+    /** Controls logs colors (default: true). */
+    colors?: boolean;
+    /** Custom help renderer function to run instead of the built-in help renderer (default: null). */
+    help?: (definitions: List<CommandDeclaration>, cmd: string) => void;
+
+  }
+
 }

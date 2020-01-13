@@ -842,4 +842,54 @@ describe('App', function() {
 
   });
 
+  it('should set config correctly', async function() {
+
+    const app = new ArgumentalApp();
+    let defs: Argumental.List<Argumental.CommandDeclaration>;
+    let currentCommand: string;
+
+    await app
+    .config({ colors: false, help: (definitions, cmd) => {
+
+      defs = definitions;
+      currentCommand = cmd;
+
+    }})
+    .option('-p --port')
+    .parse(['node', 'test', '--help']);
+
+    expect((<any>app)._log._colors).to.be.false;
+    expect(currentCommand).to.equal('');
+    expect(defs).to.deep.equal({
+      '': {
+        name: '',
+        description: null,
+        aliases: [],
+        arguments: [],
+        options: [
+          {
+            shortName: null,
+            longName: 'help',
+            apiName: 'help',
+            description: 'displays application help',
+            required: false,
+            multi: false,
+            argument: null
+          },
+          {
+            shortName: 'p',
+            longName: 'port',
+            apiName: 'port',
+            description: null,
+            required: false,
+            multi: false,
+            argument: null
+          }
+        ],
+        actions: [(<any>app)._commands[''].actions[0]]
+      }
+    });
+
+  });
+
 });

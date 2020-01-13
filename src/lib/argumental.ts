@@ -72,6 +72,24 @@ export class ArgumentalApp extends BuiltInValidators {
   private _log = new Logger();
 
   /**
+  * Configures Argumental with the provided options.
+  * @param options The configuration options.
+  */
+  public config(options: Argumental.Options): ArgumentalApp {
+
+    // Set defaults
+    if ( ! options.hasOwnProperty('colors') ) options.colors = true;
+    if ( ! options.hasOwnProperty('help') ) options.help = null;
+
+    // Apply config
+    this._log.colors = options.colors;
+    this._log.customHelpRenderer = options.help;
+
+    return this;
+
+  }
+
+  /**
   * Sets the application version and defines the top-level option `-v --version`.
   * @param version The application version.
   */
