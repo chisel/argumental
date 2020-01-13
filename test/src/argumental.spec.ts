@@ -389,6 +389,9 @@ describe('App', function() {
     let args: any, opts: any;
 
     await app
+    .version('1.0.2')
+    .option('--kir')
+    .argument('<ehem>')
     .command('test')
     .argument('<arg1>', null, validators.BOOLEAN, true)
     .argument('[arg2]', null, null, 'def2')
@@ -413,6 +416,77 @@ describe('App', function() {
       log: 'verbose',
       error: [0, 1]
     });
+
+  });
+
+  it('should define top-level properties correctly', async function() {
+
+    const app = new ArgumentalApp();
+    const flags: string[] = [];
+
+    // Capture error messages
+    let errors: string[] = [];
+
+    (<any>app)._log.error = (...messages: Array<string|Error>) => {
+
+      errors = errors.concat(messages.map(message => message instanceof Error ? message.message : message));
+
+    };
+
+    app
+    .option('-v --version')
+    .action((args, opts, cmd, suspend) => {
+
+      if ( opts.version ) {
+
+        flags.push('VERSION');
+        suspend();
+
+      }
+
+    })
+    .action((args, opts, cmd, suspend) => {
+
+      if ( opts.test ) {
+
+        flags.push('TEST');
+        suspend();
+
+      }
+
+    })
+    .action(() => {
+
+      flags.push('LAST');
+
+    })
+    .global
+    .argument('<arg1>')
+    .top
+    .option('-t --test <arg>');
+
+    await app.parse(['node', 'test', '--version']);
+
+    expect(errors).to.be.empty;
+    expect(flags.shift()).to.equal('VERSION');
+    expect(flags).to.be.empty;
+
+    await app.parse(['node', 'test', '--test', 'blah']);
+
+    expect(errors).to.be.empty;
+    expect(flags.shift()).to.equal('TEST');
+    expect(flags).to.be.empty;
+
+    await app.parse(['node', 'test']);
+
+    expect(errors).to.be.empty;
+    expect(flags.shift()).to.equal('LAST');
+    expect(flags).to.be.empty;
+
+    await app.parse(['node', 'test', 'anything']);
+
+    expect(errors.shift()).to.equal('Unknown command!');
+    expect(errors).to.be.empty;
 
   });
 

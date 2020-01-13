@@ -627,6 +627,14 @@ describe('Parser', function() {
   it('should fail to parse invalid cli arguments', function() {
 
     const commands: Argumental.List<Argumental.CommandDeclaration> = {
+      '': {
+        name: '',
+        description: null,
+        aliases: [],
+        options: [],
+        arguments: [],
+        actions: []
+      },
       'new script': {
         name: 'new script',
         description: null,

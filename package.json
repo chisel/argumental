@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "start": "./node_modules/typescript/bin/tsc --build",
-    "test": "npm start && ./node_modules/typescript/bin/tsc -p test/tsconfig.json && ./node_modules/mocha/bin/mocha ./test/dist/main.spec.js",
+    "test": "npm start && ./node_modules/typescript/bin/tsc -p test/tsconfig.json && ./node_modules/mocha/bin/mocha --require source-map-support/register ./test/dist/main.spec.js",
     "docs": "./node_modules/typedoc/bin/typedoc src --out docs --name \"Argumental Developer Documentation\" --tsconfig ./tsconfig.json --excludeExternals --includeDeclarations typings.d.ts"
   },
   "repository": {
@@ -37,6 +37,7 @@
     "@types/node": "^13.1.5",
     "chai": "^4.2.0",
     "mocha": "^7.0.0",
+    "source-map-support": "^0.5.16",
     "typedoc": "^0.15.8",
     "typescript": "^3.7.4"
   },

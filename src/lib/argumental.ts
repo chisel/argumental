@@ -5,6 +5,23 @@ import { Logger } from './logger';
 
 export class ArgumentalApp {
 
+  constructor() {
+
+    // Define --help top-level
+    this._commands[''].options.push(this._parser.parseOption('--help', 'displays application help'));
+    this._commands[''].actions.push((args, opts, cmd, suspend) => {
+
+      if ( opts.help ) {
+
+        this._log.help();
+        suspend();
+
+      }
+
+    });
+
+  }
+
   /** Global declaration flag. */
   private _global: boolean = false;
   /** Global declarations to prepend to all future command declarations. */
@@ -14,9 +31,19 @@ export class ArgumentalApp {
     actions: []
   };
   /** Command declarations. */
-  private _commands: Argumental.List<Argumental.CommandDeclaration> = {};
+  private _commands: Argumental.List<Argumental.CommandDeclaration> = {
+    // Top-level
+    '': {
+      name: '',
+      description: null,
+      aliases: [],
+      arguments: [],
+      options: [],
+      actions: []
+    }
+  };
   /** Current command declaration. */
-  private _currentCommand: string = null;
+  private _currentCommand: string = '';
   /** List of all command names and aliases for quick conflict checks. */
   private _conflicts: string[] = [];
   /** Application version. */
@@ -29,12 +56,25 @@ export class ArgumentalApp {
   private _log = new Logger();
 
   /**
-  * Sets the application version.
+  * Sets the application version and defines the top-level option `-v --version`.
   * @param version The application version.
   */
   public version(version: string): ArgumentalApp {
 
     this._version = version.trim();
+
+    this._commands[''].options.push(this._parser.parseOption('-v --version', 'displays application version'));
+    this._commands[''].actions.push((args, opts, cmd, suspend) => {
+
+      if ( opts.version ) {
+
+        console.log(this._version);
+
+        suspend();
+
+      }
+
+    });
 
     return this;
 
@@ -46,6 +86,18 @@ export class ArgumentalApp {
   public get global(): ArgumentalApp {
 
     this._global = true;
+
+    return this;
+
+  }
+
+  /**
+  * Makes any following argument, option, and action declaration applied to top-level.
+  */
+  public get top(): ArgumentalApp {
+
+    this._global = false;
+    this._currentCommand = '';
 
     return this;
 
@@ -145,7 +197,8 @@ export class ArgumentalApp {
 
       for ( const commandName in this._commands ) {
 
-        this._commands[commandName].actions.push(handler);
+        // Exclude top-level
+        if ( commandName !== '' ) this._commands[commandName].actions.push(handler);
 
       }
 
@@ -197,7 +250,8 @@ export class ArgumentalApp {
 
       for ( const commandName in this._commands ) {
 
-        this._commands[commandName].arguments.push(argument);
+        // Exclude top-level
+        if ( commandName !== '' ) this._commands[commandName].arguments.push(argument);
 
       }
 
@@ -251,7 +305,8 @@ export class ArgumentalApp {
 
       for ( const commandName in this._commands ) {
 
-        this._commands[commandName].options.push(option);
+        // Exclude top-level
+        if ( commandName !== '' ) this._commands[commandName].options.push(option);
 
       }
 
@@ -472,9 +527,11 @@ export class ArgumentalApp {
     // Run action handlers
     for ( const action of command.actions ) {
 
+      let suspend = false;
+
       try {
 
-        await action(parsed.args, parsed.opts, parsed.cmd);
+        await action(parsed.args, parsed.opts, parsed.cmd, () => { suspend = true });
 
       }
       catch (error) {
@@ -482,6 +539,8 @@ export class ArgumentalApp {
         return this._log.error(error.message);
 
       }
+
+      if ( suspend ) break;
 
     }
 

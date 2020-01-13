@@ -49,4 +49,13 @@ export class Logger {
 
   }
 
+  /**
+  * Displays application help in the console.
+  */
+  public help(): void {
+
+
+
+  }
+
 }

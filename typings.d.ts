@@ -5,8 +5,9 @@ declare namespace Argumental {
   * @param args Parsed arguments for the command.
   * @param opts Parsed options for the command.
   * @param cmd The name of the invoked command.
+  * @param suspend Suspends next actions handlers (if any).
   */
-  type ActionHandler = (args: { [arg: string]: any }, opts: { [opt: string]: any }, cmd: string) => void|Promise<void>;
+  type ActionHandler = (args: { [arg: string]: any }, opts: { [opt: string]: any }, cmd: string, suspend: () => void) => void|Promise<void>;
 
   /**
   * Argument or option validator.

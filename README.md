@@ -71,11 +71,13 @@ Argumental provides a [chainable API](#chaining-and-context) to define the whole
     - ___handler___: An action handler function which takes the following parameters:
       - **args**: A key-value pair object containing the passed-in arguments (uses camel-cased argument names as keys).
       - **opts**: A key-value pair object containing the passed-in options (uses the shorthand and camel-cased option names as keys). If option definition didn't contain an argument, values would be booleans instead. If option defined argument and can occur multiple times, the value would be an array containing each occurrence's value.
+      - **suspend**: A function which suspends next action handlers from being executed when called.
       - **cmd**: The invoked command's name.
   - **version(___version___)**: Sets the application version.
     - ___version___: The version of the application.
   - **parse(___argv___)**: Parses the passed in array of command-line arguments (e.g. `process.argv`) and ends the chain by returning a void promise which always resolves.
-  - **global**: Turns [global declaration](#globals) on within the chain. Any calls to `argument()`, `option()`, and `action()` methods would define globals instead until `command()` is called again.
+  - **global**: Turns [global declaration](#chaining-and-context) on within the chain. Any calls to `argument()`, `option()`, and `action()` methods would define globals instead until context is changed.
+  - **top**: Turns [top-level declaration](#chaining-and-context) on within the chain. Any calls to `argument()`, `option()`, and `action()` methods would define on top-level instead until context is changed.
   - **STRING**: Built-in validator which validates the argument value as string.
   - **NUMBER**: Built-in validator which validates the argument value as a number (also converts the input to number).
   - **BOOLEAN**: Built-in validator which validates the argument value as boolean (also converts the input to boolean).
@@ -88,16 +90,33 @@ Each call to the `command()` method determines that until this method is called 
 ```js
 app
 .command('command1')
-.argument('[arg1]')   // Defined for command1
-.option('--option1')  // Defined for command1
+.argument('[arg1]')               // Defined for command1
+.option('--option1')              // Defined for command1
+.action((args, opts, cmd) => { }) // Defined for command1
 // Changing context
 .command('command2')
-.argument('[arg2]')   // Defined for command2
-.alias('c2')          // Defined for command2
+.argument('[arg2]')               // Defined for command2
+.alias('c2')                      // Defined for command2
+.action((args, opts, cmd) => { }) // Defined for command2
 .parse(process.argv);
 ```
 
-Following this convention, arguments, options, and actions can be defined on a global context and applied to all commands. Example:
+If command is not called at the start of the chain, all declarations will be applied on "top-level". Example:
+
+The following defines **app <arg1> --force** (considering application name is `app`, e.g. `npm install app -g`):
+```js
+app
+.argument('<arg1>')
+.option('--force')
+.action((args, opts, cmd) => { })
+.parse(process.argv);
+```
+
+Top-level declaration can also be enabled anywhere in the chain by using the `top` keyword.
+
+> **NOTE:** Options `-v --version` and `--help` are defined on top-level by default. To overwrite `-v --version`, don't call `version()` in the chain and define the option manually. To overwrite `--help`, provide a `helper` using the `config()` method.
+
+Arguments, options, and actions can also be defined on a global context and applied to all commands (excluding top-level) using the `global` keyword. Example:
 
 ```js
 app
@@ -122,9 +141,9 @@ app
 
 When switching to global context, all definitions will be appended to previous and prepended to future commands.
 
-> **NOTE:** You cannot define aliases on a global context.
+> **NOTE:** You cannot define aliases on global context.
 
-> **NOTE:** Chain should always start with either `global` or `command()` and end with `parse()`.
+> **NOTE:** Chain always starts at top-level and should end with `parse()`.
 
 ## Validation
 

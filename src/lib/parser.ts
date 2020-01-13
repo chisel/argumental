@@ -211,7 +211,7 @@ export class Parser {
   public parseCliArguments(args: string[], commands: { [command: string]: Argumental.CommandDeclaration }): Argumental.ParsedArguments|Error {
 
     // Detect command
-    let detectedCommand: string = null;
+    let detectedCommand: string = '';
     let remainingArgs: string[] = null;
     const commandMappings: Argumental.List<string> = {};
 
@@ -246,9 +246,6 @@ export class Parser {
 
     }
 
-    // If no commands detected
-    if ( ! detectedCommand ) return new Error(`Unknown command!`);
-
     // Configure Minimist
     const minimistConfig = { boolean: [], string: [] };
 
@@ -262,7 +259,7 @@ export class Parser {
     }
 
     // Parse arguments using Minimist
-    const parsed = minimist(remainingArgs, minimistConfig);
+    const parsed = minimist(remainingArgs || args, minimistConfig);
     const parsedArgs: Argumental.ParsedArguments = { cmd: detectedCommand, args: {}, opts: {} };
 
     // Add arguments
@@ -271,6 +268,9 @@ export class Parser {
       parsedArgs.args[argument.apiName] = parsed._.shift() || null;
 
     }
+
+    // If top-level has no arguments and detected is top-level while arguments are provided, count as unknown command
+    if ( detectedCommand === '' && ! commands[detectedCommand].arguments.length && parsed._.length ) return new Error(`Unknown command!`);
 
     // If more arguments were provided (any arguments left over)
     if ( parsed._.length )
