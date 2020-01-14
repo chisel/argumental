@@ -1003,7 +1003,7 @@ export class ArgumentalApp extends BuiltInValidators {
       }
       catch (error) {
 
-        return this._log.error(error.message);
+        return console.error(error);
 
       }
 

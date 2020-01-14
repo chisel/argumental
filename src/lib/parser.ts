@@ -447,7 +447,7 @@ export class Parser {
 
     // If more arguments were provided (any arguments left over) and no immediate option provided
     if ( parsed._.length && ! immediateOption )
-      return new Error(`Expected ${commands[detectedCommand].arguments.length} arguments but got ${commands[detectedCommand].arguments.length + parsed._.length}!`);
+      return new Error(`Expected ${commands[detectedCommand].arguments.length} argument${commands[detectedCommand].arguments.length !== 1 ? 's' : ''} but got ${commands[detectedCommand].arguments.length + parsed._.length}!`);
 
     // If unknown options were provided and no immediate option was
     if ( ! immediateOption ) {
