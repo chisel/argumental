@@ -797,6 +797,7 @@ export class ArgumentalApp extends BuiltInValidators {
 
     }
 
+    // Skip arguments validators if immediate option was provided
     if ( ! immediateOption ) {
 
       // Run argument validators
@@ -823,6 +824,9 @@ export class ArgumentalApp extends BuiltInValidators {
           try {
 
             const newValue = await (<Argumental.Validator>validator)(parsed.args[argument.apiName], argument.name, true, parsed.cmd, () => { suspended = true; });
+
+            // Throw error if return value is an error object
+            if ( newValue instanceof Error ) throw newValue;
 
             // Update the value
             if ( newValue !== undefined ) parsed.args[argument.apiName] = newValue;
@@ -894,6 +898,9 @@ export class ArgumentalApp extends BuiltInValidators {
           try {
 
             const newValue = await (<Argumental.Validator>validator)(value, option.longName || option.shortName, false, parsed.cmd, () => { suspended = true; });
+
+            // Throw error if return value is an error object
+            if ( newValue instanceof Error ) throw newValue;
 
             // Update the value
             if ( newValue !== undefined ) {

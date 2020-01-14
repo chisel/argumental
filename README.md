@@ -283,7 +283,9 @@ When switching to global context, all definitions will be appended to previous a
 
 # Validation
 
-Validators are functions that take a user-provided argument value and check it based on specific rules. If validation fails, validators must throw an error with a custom message to display to the user. If a validator returns a value, that value will overwrite user's original value; this allows type casting and input sanitization.
+Validators are functions that take a user-provided argument value and check it based on specific rules. If validation fails, validators must throw or return an error with a custom message to display to the user.
+
+If a validator returns a value, that value will overwrite user's original value (as long as the returning value is not an error object). This behavior allows type casting and input sanitization.
 
 Validator functions take the following parameters:
   - **value**: The argument value in its current state.
@@ -298,6 +300,8 @@ app
 .argument('<arg1>', 'description', value => value.toLowerCase())
 .parse(process.argv);
 ```
+
+> **NOTE:** If sanitization is the only job for a validator function, the `sanitize()` method can be used instead to improve readability.
 
 If multiple validators are provided as an array, they will execute one-by-one in order and may change the argument value multiple times. They can also return a promise for async execution.
 
