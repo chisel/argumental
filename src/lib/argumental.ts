@@ -823,7 +823,13 @@ export class ArgumentalApp extends BuiltInValidators {
 
           try {
 
-            const newValue = await (<Argumental.Validator>validator)(parsed.args[argument.apiName], argument.name, true, parsed.cmd, () => { suspended = true; });
+            const newValue = await (<Argumental.Validator>validator)({
+              value: parsed.args[argument.apiName],
+              name: argument.name,
+              arg: true,
+              cmd: parsed.cmd,
+              suspend: () => { suspended = true; }
+            });
 
             // Throw error if return value is an error object
             if ( newValue instanceof Error ) throw newValue;
@@ -897,7 +903,13 @@ export class ArgumentalApp extends BuiltInValidators {
 
           try {
 
-            const newValue = await (<Argumental.Validator>validator)(value, option.longName || option.shortName, false, parsed.cmd, () => { suspended = true; });
+            const newValue = await (<Argumental.Validator>validator)({
+              value: value,
+              name: option.longName || option.shortName,
+              arg: false,
+              cmd: parsed.cmd,
+              suspend: () => { suspended = true; }
+            });
 
             // Throw error if return value is an error object
             if ( newValue instanceof Error ) throw newValue;

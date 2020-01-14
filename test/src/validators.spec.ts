@@ -7,13 +7,13 @@ describe('Validators', function() {
 
   it('should validate strings', function() {
 
-    expect(validators.STRING('string value', 'correct value', true, 'command', null)).to.be.undefined;
+    expect(validators.STRING({ value: 'string value', name: 'correct value', arg: true, cmd: 'command', suspend: null })).to.be.undefined;
 
     let validationError: Error = null;
 
     try {
 
-      validators.STRING(true, 'incorrect value', false, 'command', null)
+      validators.STRING({ value: true, name: 'incorrect value', arg: false, cmd: 'command', suspend: null });
 
     }
     catch (error) {
@@ -29,14 +29,14 @@ describe('Validators', function() {
 
   it('should validate numbers', function() {
 
-    expect(validators.NUMBER(1000, 'correct value', false, 'command', null)).to.equal(1000);
-    expect(validators.NUMBER('2000', 'castable string', true, 'command', null)).to.equal(2000);
+    expect(validators.NUMBER({ value: 1000, name: 'correct value', arg: false, cmd: 'command', suspend: null })).to.equal(1000);
+    expect(validators.NUMBER({ value: '2000', name: 'castable string', arg: true, cmd: 'command', suspend: null })).to.equal(2000);
 
     let validationError: Error = null;
 
     try {
 
-      validators.NUMBER('80s', 'incorrect value', true, 'command', null);
+      validators.NUMBER({ value: '80s', name: 'incorrect value', arg: true, cmd: 'command', suspend: null} );
 
     }
     catch (error) {
@@ -52,14 +52,14 @@ describe('Validators', function() {
 
   it('should validate booleans', function() {
 
-    expect(validators.BOOLEAN(false, 'correct value', true, 'command', null)).to.equal(false);
-    expect(validators.BOOLEAN('true', 'castable boolean', false, 'command', null)).to.equal(true);
+    expect(validators.BOOLEAN({ value: false, name: 'correct value', arg: true, cmd: 'command', suspend: null })).to.equal(false);
+    expect(validators.BOOLEAN({ value: 'true', name: 'castable boolean', arg: false, cmd: 'command', suspend: null })).to.equal(true);
 
     let validationError: Error = null;
 
     try {
 
-      validators.BOOLEAN(0, 'incorrect value', false, 'command', null);
+      validators.BOOLEAN({ value: 0, name: 'incorrect value', arg: false, cmd: 'command', suspend: null });
 
     }
     catch (error) {
@@ -80,7 +80,7 @@ describe('Validators', function() {
     try {
 
       validationError = null;
-      validators.FILE_PATH('package.json', 'file', true, 'command', null);
+      validators.FILE_PATH({ value: 'package.json', name: 'file', arg: true, cmd: 'command', suspend: null });
 
     }
     catch (error) {
@@ -94,7 +94,7 @@ describe('Validators', function() {
     try {
 
       validationError = null;
-      validators.FILE_PATH('this-file-should-not-exist.json', 'file', true, 'command', null);
+      validators.FILE_PATH({ value: 'this-file-should-not-exist.json', name: 'file', arg: true, cmd: 'command', suspend: null });
 
     }
     catch (error) {

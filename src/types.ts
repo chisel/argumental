@@ -26,12 +26,24 @@ export namespace Argumental {
   * If validation fails, this method should throw an error with a message.
   * This method may return a promise for async execution.
   * This method may change the value by returning a new one (directly or with promise).
-  * @param value The validation target.
-  * @param name The argument or option name.
-  * @param arg Boolean indicating if the value is an argument or an option.
-  * @param cmd Command name.
+  * @param params Validator parameters object.
   */
-  export type Validator = (value: any, name: string, arg: boolean, cmd: string, suspend: () => void) => any;
+  export type Validator = (params: ValidatorParams) => any;
+
+  export interface ValidatorParams {
+
+    /** The validation target. */
+    value: any;
+    /** The argument or option name. */
+    name: string;
+    /** Boolean indicating if the value is an argument or an option. */
+    arg: boolean;
+    /** Command name. */
+    cmd: string;
+    /** Suspends next validators (if any). */
+    suspend: () => void;
+
+  }
 
   export interface GlobalDeclaration {
 

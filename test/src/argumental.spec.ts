@@ -452,7 +452,7 @@ describe('App', function() {
     .command('convert')
     .argument('<amount>', 'The money amount in dollars (e.g. $100)', [
       /^\$\d+$/,
-      (value: string, name, arg, cmd, suspend) => {
+      ({ value, suspend }) => {
 
         if ( value === '$13' ) {
 
@@ -462,7 +462,7 @@ describe('App', function() {
         }
 
       },
-      (value: string) => {
+      ({ value }) => {
 
         const num = +value.match(/^\$(\d+)$/)[1];
 
@@ -473,7 +473,8 @@ describe('App', function() {
         return num;
 
       }
-    ]);
+    ])
+    .argument('[test]', null, ({ value }) => value === 'throw' ? new Error('Thrown!') : value);
 
     await app.parse(['node', 'test', 'convert', '$135']);
 
@@ -498,6 +499,18 @@ describe('App', function() {
     expect(converted.shift()).to.equal('$13');
     expect(converted).to.be.empty;
 
+    await app.parse(['node', 'test', 'convert', '$12', 'hey']);
+
+    converted.shift();
+    expect(errors).to.be.empty;
+
+    await app.parse(['node', 'test', 'convert', '$12', 'throw']);
+
+    converted.shift();
+    expect(errors.shift()).to.equal('Thrown!');
+    expect(errors).to.be.empty;
+    expect(converted).to.be.empty;
+
   });
 
   it('should run option validators correctly', async function() {
@@ -518,19 +531,19 @@ describe('App', function() {
     .command('test')
     .option('-p --port <port_number>', null, false, [
       app.NUMBER,
-      value => {values.push(value)}
+      ({ value }) => {values.push(value)}
     ])
     .option('--logs [level]', null, false, [
       /verbose|silent/i,
-      value => value.toUpperCase(),
-      value => {values.push(value)}
+      ({ value }) => value.toUpperCase(),
+      ({ value }) => {values.push(value)}
     ])
     .option('-n <num>', null, true, [
       app.NUMBER,
-      (value, name, arg, cmd) => {
+      ({ value, name, arg, cmd }) => {
         if ( value > 100 ) throw new Error(`Invalid number ${value} for ${arg ? 'argument' : 'option'} ${name} of command ${cmd}!`);
       },
-      value => {values.push(value)}
+      ({ value }) => {values.push(value)}
     ]);
 
     await app.parse(['node', 'test', 'test', '-n', '50', '-p', 'port']);
@@ -584,11 +597,13 @@ describe('App', function() {
     .option('-l', null, false, null, false, true)
     .option('--log [level]', null, false, null, false, 'silent')
     .option('--error [code]', null, true, app.NUMBER, true, 0)
+    .option('-r <req_arg>', null, false, null, false, 'def4')
+    .option('-s <req_arg>', null, false, null, false, 'def5')
     .action(({ args, opts }) => {
       _args = args;
       _opts = opts;
     })
-    .parse(['node', 'test', 'test', 'false', 'provided', '--log', 'verbose', '--error', '--error', '1']);
+    .parse(['node', 'test', 'test', 'false', 'provided', '--log', 'verbose', '--error', '--error', '1', '-s', 'b']);
 
     expect(_args).to.deep.equal({
       arg1: false,
@@ -600,7 +615,9 @@ describe('App', function() {
       help: false,
       l: false,
       log: 'verbose',
-      error: [0, 1]
+      error: [0, 1],
+      r: 'def4',
+      s: 'b'
     });
 
   });
