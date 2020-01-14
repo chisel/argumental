@@ -116,8 +116,9 @@ export class Logger {
       // Add signature
       text =
       color`\n\n   {white.bold USAGE:}\n\n      ` +
-      color`${this._appName ? this._appName + ' ' : ''}{blueBright ${cmd}}${
-        definitions[cmd].arguments.map(arg => arg.required ? color`{magenta <${arg.name}>}` : color`{magenta [${arg.name}]}`).join(' ') + ' '
+      color`${this._appName ? this._appName + ' ' : ''}{blueBright ${cmd}} ${
+        definitions[cmd].arguments.map(arg => arg.required ? color`{magenta <${arg.name}>}` : color`{magenta [${arg.name}]}`).join(' ') +
+        (definitions[cmd].arguments.length ? ' ' : '')
       }{yellow.italic [options]}`;
 
     }
