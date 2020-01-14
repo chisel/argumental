@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import { ArgumentalApp } from '../../dist/lib/argumental';
+import { Argumental } from '../../dist/types';
 
 describe('App', function() {
 

@@ -27,14 +27,24 @@
       - [FILE_PATH](#file_path)
   5. [Chaining And Context](#chaining-and-context)
   6. [Validation](#validation)
-  7. [Examples](#examples)
-  8. [Tests](#tests)
-  9. [Developer Documentation](#developer-documentation)
-  10. [Building The Source](#building-the-source)
+  7. [Modular Design](#modular-design)
+  8. [Extras](#extras)
+  9. [Examples](#examples)
+  10. [Tests](#tests)
+  11. [Developer Documentation](#developer-documentation)
+  12. [Building The Source](#building-the-source)
 
 # About
 
-Argumental is a framework for building CLI applications using Node.js, which enables fast development through defining an easy-to-use API.
+Argumental is a framework for building CLI applications using Node.js, which enables fast development by providing an easy-to-use API with a middleware stack system.
+
+With Argumental, you can:
+
+  - Develop CLI apps faster by reusing code through a middleware stack system
+  - Create middleware stacks for input validation and sanitization
+  - Improve code readability by using an easy-to-understand API
+  - Design modular code
+  - ...and beyond!
 
 # Installation
 
@@ -111,7 +121,7 @@ Defines an option for the current command.
   - **required**: `Optional` Indicates whether this option is required for the command.
   - **validators**: `Optional` A single or an array of [validators](#validation) to validate the option's argument value (only applies to options with an argument).
   - **multi**: `Optional` Indicates whether this option can be repeated more than once (only practical for options with argument).
-  - **defaultValue**: `Optional` The default value of the argument if value was not provided (only applies to options with an optional argument, e.g. `--option [argument]`).
+  - **defaultValue**: `Optional` The default value of the argument if value was not provided (only applies to options with an argument).
   - **immediate**: `Optional` Indicates if all other components (arguments, options, etc.) should be ignored in the parsing process and action handlers should be called as soon as possible when this option is provided. This behavior is desired with options such as `--help` and `--version`. Keep in mind that validators will be run before the action handlers for the first encountered immediate option only.
 
 ### action(___handler___)
@@ -124,7 +134,9 @@ Defines an action for the current command.
     - **cmd**: The invoked command's name.
     - **data**: An object shared between all action handlers of the same command to pass data around.
 
-> **NOTE**: You can use parameter destructuring to access any properties needed.
+> **NOTE:** You can use parameter destructuring to access any properties needed.
+
+> **NOTE:** If using TypeScript, you can provide the `data` object's type by using the this method's generic signature `action<T>()`.
 
 ### description(___text___)
 
@@ -148,7 +160,7 @@ Sets the immediate flag for the current option.
 
 ### default(___value___)
 
-Sets default value for the current argument or option (only applies to optional arguments).
+Sets default value for the current argument or option.
   - **value**: The default value to set.
 
 ### validate(___validators___)
@@ -185,7 +197,7 @@ Configures Argumental with the given options. Options object can have any of the
   - **colors**: Boolean indicating if logs should be colorful (defaults to `true`).
   - **topLevelPlainHelp**: When true, application help will be displayed when the top-level command is invoked without any arguments or options (defaults to `true`).
   - **help**: A help renderer function to invoke when help must be rendered and logged to console. The function takes the following parameters:
-    - **definitions**: A key-value pair object containing all [command declarations](https://github.com/chisel/argumental/blob/master/typings.d.ts#L47) where key `''` refers to the top-level command.
+    - **definitions**: A key-value pair object containing all [command declarations](https://github.com/chisel/argumental/blob/master/src/types.ts#L47) where key `''` refers to the top-level command.
     - **cmd**: The invoked command name.
 
 ### STRING
@@ -322,9 +334,78 @@ app
 
 > **NOTE:** Validators won't run when no value is provided for optional arguments or if defined on boolean options.
 
+# Modular Design
+
+The following demonstrates how various modules can be defined to perform specific tasks in Argumental:
+
+**Global Module** (runs before all others)
+```ts
+import app from 'argumental';
+// Type definitions for the global data object
+import { GlobalData } from './types';
+
+app
+// Configure app
+.config({  })
+// Define global action handler
+.global
+.action<GlobalData>(({ data }) => {
+
+  // Provide to all action handlers
+  data.prop = 'value';
+
+});
+```
+
+**Command Module**
+```ts
+import app from 'argumental';
+import { GlobalData } from './types';
+
+app
+.command('cmd1')
+.action<GlobalData>(({ data }) => {
+
+  // Perform command-specific task
+  // data.prop is provided
+
+});
+```
+
+**App Module**
+```ts
+import app from 'argumental';
+
+import './global.module';
+import './cmd1.module';
+
+app
+// Set version
+.version('1.0.0')
+// Start the app
+.parse(process.argv);
+```
+
+# Extras
+
+Argumental's type definitions can be imported in TypeScript when casting to internal types is needed:
+
+```ts
+import { Argumental } from 'argumental/dist/types';
+```
+
+---
+
+If a new instance of the app is needed, the `ArgumentalApp` class can be imported directly:
+
+```ts
+import { ArgumentalApp } from 'argumental/dist/lib/argumental';
+const app = new ArgumentalApp();
+```
+
 # Examples
 
-Several examples with different project setup and API usage are included in the [examples directory](https://github.com/chisel/argumental/tree/master/examples).
+Several examples with different project setup and API usage are included in the [examples directory](https://github.com/chisel/argumental/tree/master/examples). These examples demonstrate Argumental's full potential in creating flexible and modular CLI apps while writing less code.
 
 # Tests
 

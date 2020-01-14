@@ -3,6 +3,7 @@ import path from 'path';
 import { Parser } from './parser';
 import { Logger } from './logger';
 import { BuiltInValidators } from './validators';
+import { Argumental } from '../types';
 
 export class ArgumentalApp extends BuiltInValidators {
 
@@ -625,7 +626,7 @@ export class ArgumentalApp extends BuiltInValidators {
   * @param required A boolean indicating if option is required.
   * @param validators A single or an array of validators.
   * @param multi A boolean indicating whether this option can be repeated more than once (only practical for options with argument).
-  * @param defaultValue A default value to use for the option's argument (when argument is optional).
+  * @param defaultValue A default value to use for the option's argument (if defined).
   * @param immediate Whether to stop parsing other components and run the action handlers when this option is provided (e.g. --help).
   */
   public option(syntax: string): ArgumentalApp;
@@ -943,14 +944,15 @@ export class ArgumentalApp extends BuiltInValidators {
 
       const apiName = option.apiName || option.shortName;
 
-      if ( ! option.argument || option.argument.required ) continue;
+      // If binary
+      if ( ! option.argument ) continue;
 
       // If array
       if ( parsed.opts[apiName] && typeof parsed.opts[apiName] === 'object' && parsed.opts[apiName].constructor === Array ) {
 
         for ( let i = 0; i < (<Array<string>>parsed.opts[apiName]).length; i++ ) {
 
-          if ( parsed.opts[apiName][i] === null ) {
+          if ( parsed.opts[apiName][i] === null || parsed.opts[apiName][i] === undefined ) {
 
             if ( option.apiName ) parsed.opts[option.apiName][i] = <any>option.argument.default;
             if ( option.shortName ) parsed.opts[option.shortName][i] = <any>option.argument.default;
@@ -963,7 +965,7 @@ export class ArgumentalApp extends BuiltInValidators {
       // Single value
       else {
 
-        if ( parsed.opts[apiName] === null ) {
+        if ( parsed.opts[apiName] === null || parsed.opts[apiName] === undefined ) {
 
           if ( option.shortName ) parsed.opts[option.shortName] = <any>option.argument.default;
           if ( option.apiName ) parsed.opts[option.apiName] = <any>option.argument.default;

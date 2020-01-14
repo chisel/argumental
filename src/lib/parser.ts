@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import minimist from 'minimist';
+import { Argumental } from '../types';
 
 export class Parser {
 

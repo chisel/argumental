@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { Parser } from '../../dist/lib/parser';
 import { BuiltInValidators } from '../../dist/lib/validators';
+import { Argumental } from '../../dist/types';
 
 describe('Parser', function() {
 

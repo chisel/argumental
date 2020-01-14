@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import _ from 'lodash';
+import { Argumental } from '../types';
 
 export class Logger {
 

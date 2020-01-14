@@ -1,12 +1,12 @@
-declare namespace Argumental {
+export namespace Argumental {
 
   /**
   * Action handler.
   * @param params Action handler parameters object.
   */
-  type ActionHandler<T=any> = (params: ActionHandlerParams<T>) => void|Promise<void>;
+  export type ActionHandler<T=any> = (params: ActionHandlerParams<T>) => void|Promise<void>;
 
-  interface ActionHandlerParams<T=any> {
+  export interface ActionHandlerParams<T=any> {
 
     /** Parsed arguments for the command. */
     args: List<any>;
@@ -31,9 +31,9 @@ declare namespace Argumental {
   * @param arg Boolean indicating if the value is an argument or an option.
   * @param cmd Command name.
   */
-  type Validator = (value: any, name: string, arg: boolean, cmd: string, suspend: () => void) => any;
+  export type Validator = (value: any, name: string, arg: boolean, cmd: string, suspend: () => void) => any;
 
-  interface GlobalDeclaration {
+  export interface GlobalDeclaration {
 
     /** Global argument declarations. */
     arguments: CommandArgumentDeclaration[];
@@ -44,7 +44,7 @@ declare namespace Argumental {
 
   }
 
-  interface CommandDeclaration {
+  export interface CommandDeclaration {
 
     /** Command name. */
     name: string;
@@ -61,7 +61,7 @@ declare namespace Argumental {
 
   }
 
-  interface OptionDeclaration {
+  export interface OptionDeclaration {
 
     /** Option's short name. */
     shortName: string;
@@ -82,7 +82,7 @@ declare namespace Argumental {
 
   }
 
-  interface ArgumentDeclaration {
+  export interface ArgumentDeclaration {
 
     /** Argument name. */
     name: string;
@@ -97,20 +97,20 @@ declare namespace Argumental {
 
   }
 
-  interface CommandArgumentDeclaration extends ArgumentDeclaration {
+  export interface CommandArgumentDeclaration extends ArgumentDeclaration {
 
     /** Argument description. */
     description: string;
 
   }
 
-  interface List<T> {
+  export interface List<T> {
 
     [key: string]: T;
 
   }
 
-  interface ParsedArguments {
+  export interface ParsedArguments {
 
     cmd: string;
     /** NOTE: Missing arguments would be null. */
@@ -123,7 +123,7 @@ declare namespace Argumental {
 
   }
 
-  interface Options {
+  export interface Options {
 
     /** Controls logs colors (default: true). */
     colors?: boolean;

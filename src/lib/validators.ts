@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { Argumental } from '../types';
 
 export class BuiltInValidators {
 
