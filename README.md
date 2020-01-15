@@ -72,13 +72,12 @@ CommonJS module:
 const app = require('argumental');
 ```
 
-Defining command **copy file|cp &lt;target&gt; &lt;destination_dir&gt; --delete --save-as &lt;filename&gt;**:
+Defining command **copy file &lt;target&gt; &lt;destination_dir&gt; --delete --save-as &lt;filename&gt;**:
 
-```js
+```ts
 app
 .version('1.0.0')
 .command('copy file', 'Copies a file')
-.alias('cp')
 .argument('<target>', 'Target file path')
 .argument('<destination_dir>', 'Destination directory path')
 .option('-d --delete', 'Deletes the source file after copying (moving the file)')
@@ -155,17 +154,17 @@ Defines description for the current command, argument, or option.
 ### required(___value___)
 
 Sets the required flag for the current option.
-  - **value**: Required flag's boolean value.
+  - **value**: Required flag's boolean value (defaults to `true`).
 
 ### multi(___value___)
 
 Sets the multi flag for the current option.
-  - **value**: Multi flag's boolean value.
+  - **value**: Multi flag's boolean value (defaults to `true`).
 
 ### immediate(___value___)
 
 Sets the immediate flag for the current option.
-  - **value**: Immediate flag's boolean value.
+  - **value**: Immediate flag's boolean value (defaults to `true`).
 
 ### default(___value___)
 
@@ -269,11 +268,9 @@ app
 .parse(process.argv);
 ```
 
-Top-level declaration can also be enabled anywhere in the chain by using the `top` keyword.
+> **NOTE:** Top-level declaration can also be enabled anywhere in the chain by using the `top` property.
 
-> **NOTE:** Options `-v --version` and `--help` are defined on top-level by default. To overwrite `-v --version`, don't call `version()` in the chain and define the option manually (e.g. `option('-v --version')`). To overwrite `--help`, provide the help renderer function using the [`config()` method](#configoptions).
-
-Arguments, options, and actions can also be defined on a global context and applied to all commands (excluding top-level) using the `global` keyword. Example:
+Arguments, options, and actions can also be defined on a global context and applied to all commands (excluding top-level) using the `global` property. Example:
 
 ```js
 app
@@ -380,7 +377,7 @@ app
 .parse(process.argv);
 ```
 
-In the first action handler, we're exiting early when a condition is met using the `suspend()` method. However, the first action handler does not use the `opts` and `cmd` parameters but because access to `suspend` is needed, we're forced to take the first four parameters.
+In the first action handler, we're exiting early when a condition is met using the `suspend()` method. However, the first action handler does not use the `opts` and `cmd` parameters but because access to `suspend` is needed, we're forced to take the first four parameters in.
 
 We can improve our code's readability by using the `actionDestruct()` substitute and the [destructuring assignment syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment).
 
@@ -460,6 +457,30 @@ app
 
 # Extras
 
+Options `-v --version` and `--help` are defined on top-level by default.
+
+To overwrite `-v --version`, don't call `version()` in the chain and define the option manually:
+
+```js
+app
+.option('-V --version', 'Displays application version')
+.immediate()
+.action(() => console.log('1.0.0'))
+.parse(process.argv);
+```
+
+To overwrite `--help`, provide the help renderer function using the [`config()` method](#configoptions):
+
+```js
+app
+.configure({
+  help: (definitions, cmd) => console.log('Custom help')
+})
+.parse(process.argv);
+```
+
+---
+
 Argumental's type definitions can be imported in TypeScript when casting to internal types is needed:
 
 ```ts
@@ -470,8 +491,15 @@ import { Argumental } from 'argumental/dist/types';
 
 If a new instance of the app is needed, the `ArgumentalApp` class can be imported directly:
 
+TypeScript/ES6 module:
 ```ts
 import { ArgumentalApp } from 'argumental/dist/lib/argumental';
+const app = new ArgumentalApp();
+```
+
+CommonJS module:
+```js
+const ArgumentalApp = require('argumental/dist/lib/argumental').ArgumentalApp;
 const app = new ArgumentalApp();
 ```
 

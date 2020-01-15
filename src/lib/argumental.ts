@@ -337,9 +337,9 @@ export class ArgumentalApp extends BuiltInValidators {
 
   /**
   * Sets the required flag on an option.
-  * @param value The required flag value.
+  * @param value The required flag value (defaults to true).
   */
-  public required(value: boolean): ArgumentalApp {
+  public required(value: boolean = true): ArgumentalApp {
 
     // If no component selected
     if ( this._currentComponent !== 'options' )
@@ -380,9 +380,9 @@ export class ArgumentalApp extends BuiltInValidators {
 
   /**
   * Sets the multi flag on an option.
-  * @param value The multi flag value.
+  * @param value The multi flag value (defaults to true).
   */
-  public multi(value: boolean): ArgumentalApp {
+  public multi(value: boolean = true): ArgumentalApp {
 
     // If no component selected
     if ( this._currentComponent !== 'options' )
@@ -475,9 +475,9 @@ export class ArgumentalApp extends BuiltInValidators {
 
   /**
   * Sets the immediate flag on an option.
-  * @param value The immediate flag value.
+  * @param value The immediate flag value (defaults to true).
   */
-  public immediate(value: boolean): ArgumentalApp {
+  public immediate(value: boolean = true): ArgumentalApp {
 
     // If no component selected
     if ( this._currentComponent !== 'options' )
