@@ -14,7 +14,7 @@ describe('Parser', function() {
       name: 'file_path',
       apiName: 'filePath',
       required: false,
-      validators: [validators.STRING],
+      validators: [{ callback: validators.STRING, destructuringParams: false }],
       default: undefined
     });
 
@@ -22,7 +22,7 @@ describe('Parser', function() {
       name: 'file-path',
       apiName: 'filePath',
       required: true,
-      validators: [validators.STRING],
+      validators: [{ callback: validators.STRING, destructuringParams: false }],
       default: 'package.json'
     });
 

@@ -144,7 +144,10 @@ export class Parser {
         throw new Error(`ARGUMENTAL_ERROR: Invalid validator for argument ${argument.name}! Validator must be either a validator function or a regular expression.`);
 
       // Append validator
-      argument.validators.push(validator);
+      if ( validator instanceof RegExp )
+        argument.validators.push(validator);
+      else
+        argument.validators.push({destructuringParams: false, callback: validator});
 
     }
 

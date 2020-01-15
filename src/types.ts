@@ -1,10 +1,20 @@
 export namespace Argumental {
 
   /**
-  * Action handler.
+  * Action handler with destructuring params.
   * @param params Action handler parameters object.
   */
-  export type ActionHandler<T=any> = (params: ActionHandlerParams<T>) => void|Promise<void>;
+  export type ActionHandlerWithDestructuringParams<T=any> = (params: ActionHandlerParams<T>) => void|Promise<void>;
+
+  /**
+  * Action handler.
+  * @param args Parsed arguments for the command.
+  * @param opts Parsed options for the command.
+  * @param cmd The name of the invoked command.
+  * @param suspend Suspends next actions handlers (if any).
+  * @param data An object shared between action handlers to attach any data to.
+  */
+  export type ActionHandler<T=any> = (args: List<any>, opts: List<any>, cmd: string, suspend: () => void, data: T) => void|Promise<void>;
 
   export interface ActionHandlerParams<T=any> {
 
@@ -28,7 +38,20 @@ export namespace Argumental {
   * This method may change the value by returning a new one (directly or with promise).
   * @param params Validator parameters object.
   */
-  export type Validator = (params: ValidatorParams) => any;
+  export type ValidatorWithDestructuringParams = (params: ValidatorParams) => any;
+
+  /**
+  * Argument or option validator.
+  * If validation fails, this method should throw an error with a message.
+  * This method may return a promise for async execution.
+  * This method may change the value by returning a new one (directly or with promise).
+  * @param value The validation target.
+  * @param name The argument or option name.
+  * @param arg Boolean indicating if the value is an argument or an option.
+  * @param cmd Command name.
+  * @param suspend Suspends next validators (if any).
+  */
+  export type Validator = (value: any, name: string, arg: boolean, cmd: string, suspend: () => void) => any;
 
   export interface ValidatorParams {
 
@@ -45,6 +68,15 @@ export namespace Argumental {
 
   }
 
+  export interface CallbackFunction<T> {
+
+    /** Indicates callback parameters type. */
+    destructuringParams: boolean;
+    /** The callback function. */
+    callback: T;
+
+  }
+
   export interface GlobalDeclaration {
 
     /** Global argument declarations. */
@@ -52,7 +84,7 @@ export namespace Argumental {
     /** Global option declarations. */
     options: OptionDeclaration[];
     /** Global action handlers. */
-    actions: Argumental.ActionHandler[];
+    actions: CallbackFunction<ActionHandler|ActionHandlerWithDestructuringParams>[];
 
   }
 
@@ -69,7 +101,7 @@ export namespace Argumental {
     /** Option declarations for this command. */
     options: OptionDeclaration[];
     /** Action handlers of this command. */
-    actions: Argumental.ActionHandler[];
+    actions: CallbackFunction<ActionHandler|ActionHandlerWithDestructuringParams>[];
 
   }
 
@@ -103,7 +135,7 @@ export namespace Argumental {
     /** Whether this argument is required or not. */
     required: boolean;
     /** Argument validators. */
-    validators: Array<Argumental.Validator|RegExp>;
+    validators: Array<CallbackFunction<Validator|ValidatorWithDestructuringParams>|RegExp>;
     /** Argument's default value (if optional). */
     default: string|number|boolean;
 

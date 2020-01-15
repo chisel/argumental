@@ -9,13 +9,16 @@
       - [argument()](#argumentsyntax-description-validators-defaultvalue)
       - [option()](#optionsyntax-description-required-validators-multi-defaultvalue-immediate)
       - [action()](#actionhandler)
+      - [actionDestruct()](#actiondestructhandler)
       - [description()](#descriptiontext)
       - [required()](#requiredvalue)
       - [multi()](#multivalue)
       - [immediate()](#immediatevalue)
       - [default()](#defaultvalue)
       - [validate()](#validatevalidators)
+      - [validateDestruct()](#validatedestructvalidators)
       - [sanitize()](#sanitizesanitizers)
+      - [sanitizeDestruct()](#sanitizeDestructsanitizers)
       - [version()](#versionversion)
       - [parse()](#parseargv)
       - [global](#global)
@@ -27,12 +30,13 @@
       - [FILE_PATH](#file_path)
   5. [Chaining And Context](#chaining-and-context)
   6. [Validation](#validation)
-  7. [Modular Design](#modular-design)
-  8. [Extras](#extras)
-  9. [Examples](#examples)
-  10. [Tests](#tests)
-  11. [Developer Documentation](#developer-documentation)
-  12. [Building The Source](#building-the-source)
+  7. [Destructuring Parameters](#destructuring-parameters)
+  8. [Modular Design](#modular-design)
+  9. [Extras](#extras)
+  10. [Examples](#examples)
+  11. [Tests](#tests)
+  12. [Developer Documentation](#developer-documentation)
+  13. [Building The Source](#building-the-source)
 
 # About
 
@@ -79,7 +83,7 @@ app
 .argument('<destination_dir>', 'Destination directory path')
 .option('-d --delete', 'Deletes the source file after copying (moving the file)')
 .option('--save-as <filename>', 'A filename to use for the new file')
-.action(({ args, opts, cmd }) => {
+.action((args, opts, cmd) => {
 
   // Example: copy file ./document.md ~/Documents -d --save-as new-document.md
   console.log(args);  // { target: './document.md', destination_dir: '~/Documents' }
@@ -110,7 +114,7 @@ Defines an alias for the current command.
 Defines an argument for the current command.
   - **syntax**: The argument syntax. Use `<>` for required arguments and `[]` for optional arguments (e.g. `<file_path>`). Argument name can only contain alphanumeric characters, `-`s, and `_`s.
   - **description**: `Optional` A description to display in application help.
-  - **validators**: `Optional` A single or an array of [validators](#validation) to validate the argument value.
+  - **validators**: `Optional` A single or an array of [validators](#validation) to validate the argument value ([destructuring parameters](#destructuring-parameters) not supported).
   - **defaultValue**: `Optional` The default value of the argument if value was not provided (only works with optional arguments).
 
 ### option(___syntax___, ___description___, ___required___, ___validators___, ___multi___, ___defaultValue___, ___immediate___)
@@ -119,7 +123,7 @@ Defines an option for the current command.
   - **syntax**: The option syntax. You can define a one letter shorthand (e.g. `-p`), an option name (e.g. `--port-number`), and one argument (e.g. `<port_number>`) in the syntax (e.g. `-p --port-number <port_number>`). Option name can only contain alphanumeric characters and `-`s.
   - **description**: `Optional` A description to display in application help.
   - **required**: `Optional` Indicates whether this option is required for the command.
-  - **validators**: `Optional` A single or an array of [validators](#validation) to validate the option's argument value (only applies to options with an argument).
+  - **validators**: `Optional` A single or an array of [validators](#validation) to validate the option's argument value (only applies to options with an argument and [destructuring parameters](#destructuring-parameters) not supported).
   - **multi**: `Optional` Indicates whether this option can be repeated more than once (only practical for options with argument).
   - **defaultValue**: `Optional` The default value of the argument if value was not provided (only applies to options with an argument).
   - **immediate**: `Optional` Indicates if all other components (arguments, options, etc.) should be ignored in the parsing process and action handlers should be called as soon as possible when this option is provided. This behavior is desired with options such as `--help` and `--version`. Keep in mind that validators will be run before the action handlers for the first encountered immediate option only.
@@ -127,7 +131,7 @@ Defines an option for the current command.
 ### action(___handler___)
 
 Defines an action for the current command.
-  - **handler**: An action handler function which takes one object as its parameter with the following properties:
+  - **handler**: An action handler function which takes the following parameters:
     - **args**: A key-value pair object containing the passed-in arguments (uses camel-cased argument names as keys).
     - **opts**: A key-value pair object containing the passed-in options (uses the shorthand and camel-cased option names as keys).  
     If option definition didn't contain an argument, values would be booleans instead.   
@@ -137,9 +141,11 @@ Defines an action for the current command.
     - **cmd**: The invoked command's name.
     - **data**: An object shared between all action handlers of the same command to pass data around.
 
-> **NOTE:** You can use parameter destructuring to access any properties needed.
-
 > **NOTE:** If using TypeScript, you can provide the `data` object's type by using the this method's generic signature `action<T>()`.
+
+### actionDestruct(___handler___)
+
+Same as `action()` but all parameters are provided as a single object to support [destructuring parameters](#destructuring-parameters).
 
 ### description(___text___)
 
@@ -171,10 +177,17 @@ Sets default value for the current argument or option.
 Adds a single or multiple [validators](#validation) to the current option or argument.
   - **validators**: A single or an array of [validators](#validation) to add.
 
+### validateDestruct(___validators___)
+
+Same as `validate()` but all parameters are provided as a single object to support [destructuring parameters](#destructuring-parameters).
+
 ### sanitize(___sanitizers___)
 
 Alias for `validate()`.
-  - **sanitizers**: A single or an array of [validators](#validation) to add.
+
+### sanitizeDestruct(___sanitizers___)
+
+Alias for `validateDestruct()`.
 
 ### version(___version___)
 
@@ -200,24 +213,32 @@ Configures Argumental with the given options. Options object can have any of the
   - **colors**: Boolean indicating if logs should be colorful (defaults to `true`).
   - **topLevelPlainHelp**: When true, application help will be displayed when the top-level command is invoked without any arguments or options (defaults to `true`).
   - **help**: A help renderer function to invoke when help must be rendered and logged to console. The function takes the following parameters:
-    - **definitions**: A key-value pair object containing all [command declarations](https://github.com/chisel/argumental/blob/master/src/types.ts#L47) where key `''` refers to the top-level command.
+    - **definitions**: A key-value pair object containing all [command declarations](https://github.com/chisel/argumental/blob/master/src/types.ts#L91) where key `''` refers to the top-level command.
     - **cmd**: The invoked command name.
 
 ### STRING
 
 Built-in [validator](#validation) which validates the argument value as string.
 
+> **NOTE:** Built-in validators cannot be used on `validateDestruct()` and `sanitizeDestruct()` methods.
+
 ### NUMBER
 
 Built-in [validator](#validation) which validates the argument value as a number (also converts the input to number).
+
+> **NOTE:** Built-in validators cannot be used on `validateDestruct()` and `sanitizeDestruct()` methods.
 
 ### BOOLEAN
 
 Built-in [validator](#validation) which validates the argument value as boolean (also converts the input to boolean).
 
+> **NOTE:** Built-in validators cannot be used on `validateDestruct()` and `sanitizeDestruct()` methods.
+
 ### FILE_PATH
 
 Built-in [validator](#validation) which validates the argument value as a file path (checks for file existence and read access synchronously).
+
+> **NOTE:** Built-in validators cannot be used on `validateDestruct()` and `sanitizeDestruct()` methods.
 
 # Chaining And Context
 
@@ -228,12 +249,12 @@ app
 .command('command1')
 .argument('[arg1]')               // Defined for command1
 .option('--option1')              // Defined for command1
-.action(params => { })            // Defined for command1
+.action(() => { })                // Defined for command1
 // Changing context
 .command('command2')
 .argument('[arg2]')               // Defined for command2
 .alias('c2')                      // Defined for command2
-.action(params => { })            // Defined for command2
+.action(() => { })                // Defined for command2
 .parse(process.argv);
 ```
 
@@ -244,7 +265,7 @@ The following defines **app &lt;arg1&gt; --force** (considering application name
 app
 .argument('<arg1>')
 .option('--force')
-.action(params => { })
+.action(() => { })
 .parse(process.argv);
 ```
 
@@ -260,16 +281,16 @@ app
 // Define for all commands
 .option('--silent', 'Disables logs produced by this command')
 .command('command1')
-.action(({ opts }) => {
+.actionDestruct(({ opts }) => {
   if ( ! opts.silent ) console.log('command1 used');
 })
 .command('command2')
-.action(({ opts }) => {
+.actionDestruct(({ opts }) => {
   if ( ! opts.silent ) console.log('command2 used');
 })
 .global
 // Perform after all commands
-.action(({ opts, cmd }) => {
+.actionDestruct(({ opts, cmd }) => {
   if ( ! opts.silent ) console.log(`command ${cmd} has finished`);
 })
 .parse(process.argv);
@@ -288,11 +309,7 @@ Validators are functions that take a user-provided argument value and check it b
 If a validator returns a value, that value will overwrite user's original value (as long as the returning value is not an error object). This behavior allows type casting and input sanitization.
 
 Validator functions take the following parameters:
-  - **value**: The argument value in its current state.
-  - **name**: The argument or option name.
-  - **arg**: A boolean indicating if value belongs to a plain argument or to an option's argument.
-  - **cmd**: The name of the invoked command.
-  - **suspend**: A function which suspends next validators from being executed when called.
+
 
 ```js
 app
@@ -341,6 +358,54 @@ app
 
 > **NOTE:** Validators won't run when no value is provided for optional arguments or if defined on boolean options.
 
+# Destructuring Parameters
+
+Considering the following app:
+
+```ts
+app
+.argument('<name>')
+.action((args, opts, cmd, suspend) => {
+
+  // Do stuff
+
+  if ( args.name === 'value' ) suspend(); // Exit early
+
+})
+.action(args => {
+
+  // Do more stuff
+
+})
+.parse(process.argv);
+```
+
+In the first action handler, we're exiting early when a condition is met using the `suspend()` method. However, the first action handler does not use the `opts` and `cmd` parameters but because access to `suspend` is needed, we're forced to take the first four parameters.
+
+We can improve our code's readability by using the `actionDestruct()` substitute and the [destructuring assignment syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment).
+
+Unlike `action()`, `actionDestruct()` provides all the parameters in one object and therefore allows accessing specific parameters as needed:
+
+```ts
+app
+.argument('<name>')
+.actionDestruct(({ args, suspend }) => {
+
+  // Do stuff
+
+  if ( args.name === 'value' ) suspend(); // Exit early
+
+})
+.action(args => {
+
+  // Do more stuff
+
+})
+.parse(process.argv);
+```
+
+This principle is also applied to `validateDestruct()` and `sanitizeDestruct()` methods as well.
+
 # Modular Design
 
 The following demonstrates how various modules can be defined to perform specific tasks in Argumental:
@@ -356,7 +421,7 @@ app
 .config({  })
 // Define global action handler
 .global
-.action<GlobalData>(({ data }) => {
+.actionDestruct<GlobalData>(({ data }) => {
 
   // Provide to all action handlers
   data.prop = 'value';
@@ -371,7 +436,7 @@ import { GlobalData } from './types';
 
 app
 .command('cmd1')
-.action<GlobalData>(({ data }) => {
+.actionDestruct<GlobalData>(({ data }) => {
 
   // Perform command-specific task
   // data.prop is provided

@@ -1,0 +1,27 @@
+{
+  "name": "argumental-example-dog",
+  "version": "1.0.0",
+  "description": "Argumental CLI app example",
+  "main": "bin/dog.js",
+  "bin": {
+    "dog": "bin/dog.js"
+  },
+  "scripts": {
+    "start": "./node_modules/typescript/bin/tsc --build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ramtin Soltani <ramtin@chiselpowered.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^13.1.6",
+    "@types/request": "^2.48.4",
+    "@types/request-promise-native": "^1.0.17",
+    "typescript": "^3.7.4"
+  },
+  "dependencies": {
+    "chalk": "^3.0.0",
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.8",
+    "terminal-image": "^0.2.0"
+  }
+}

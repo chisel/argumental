@@ -13,7 +13,7 @@ export class ArgumentalApp extends BuiltInValidators {
 
     // Define --help top-level
     this._commands[''].options.push(this._parser.parseOption('--help', 'displays application help', false, null, false, undefined, true));
-    this._commands[''].actions.push(({ opts, suspend }) => {
+    this._commands[''].actions.push({ destructuringParams: true, callback: ({ opts, suspend }) => {
 
       if ( opts.help ) {
 
@@ -22,18 +22,18 @@ export class ArgumentalApp extends BuiltInValidators {
 
       }
 
-    });
+    }});
 
     // Define --help on all levels
     this._globalDeclaration.options.push(this._parser.parseOption('--help', 'displays command help', false, null, false, undefined, true));
-    this._globalDeclaration.actions.push(({ opts, cmd, suspend }) => {
+    this._globalDeclaration.actions.push({ destructuringParams: true, callback: ({ opts, cmd, suspend }) => {
 
       if ( ! opts.help ) return;
 
       this._log.help(this._commands, cmd);
       suspend();
 
-    });
+    }});
 
   }
 
@@ -75,6 +75,137 @@ export class ArgumentalApp extends BuiltInValidators {
   private _topLevelPlainHelp: boolean = true;
 
   /**
+  * Attaches an array of validators to the given component (argument or option's argument).
+  * @param component A reference to an argument or and option declaration.
+  * @param validators The array of validators.
+  * @param destructuringParams Whether the validators are defined with destructuring parameters.
+  */
+  private _attachValidator(
+    component: Argumental.ArgumentDeclaration|Argumental.OptionDeclaration,
+    validators: Array<RegExp|Argumental.Validator|Argumental.ValidatorWithDestructuringParams>,
+    destructuringParams: boolean
+  ) {
+
+    if ( this._currentComponent === 'arguments' ) {
+
+      (<Argumental.ArgumentDeclaration>component).validators =
+      (<Argumental.ArgumentDeclaration>component).validators
+      .concat(validators.map(validator => {
+
+        if ( validator instanceof RegExp ) return validator;
+
+        return { destructuringParams, callback: validator };
+
+      }));
+
+    }
+    else if ( (<Argumental.OptionDeclaration>component).argument ) {
+
+      (<Argumental.OptionDeclaration>component).argument.validators =
+      (<Argumental.OptionDeclaration>component).argument.validators
+      .concat(validators.map(validator => {
+
+        if ( validator instanceof RegExp ) return validator;
+
+        return { destructuringParams, callback: validator };
+
+      }));
+
+    }
+
+  }
+
+  /**
+  * Sets validators for an option or an argument.
+  * @param validators A single or an array of validators.
+  * @param destructuringParams Whether to use destructuring params for the validators.
+  */
+  private _validate(
+    validators: Argumental.Validator|Argumental.ValidatorWithDestructuringParams|RegExp|Array<RegExp|Argumental.Validator|Argumental.ValidatorWithDestructuringParams>,
+    destructuringParams: boolean
+  ): void {
+
+    // If no component selected
+    if ( ! this._currentComponent )
+      throw new Error(`ARGUMENTAL_ERROR: Cannot set validators because no option or argument is selected!`);
+
+    // Wrap validator if not already an array
+    let wrappedValidators: Array<RegExp|Argumental.Validator>;
+
+    if ( ! validators || typeof validators !== 'object' || validators.constructor !== Array )
+      wrappedValidators = [<Argumental.Validator|RegExp>validators];
+
+    // If global
+    if ( this._global ) {
+
+      // Set for all options and arguments
+      for ( const commandName in this._commands ) {
+
+        if ( commandName === '' ) continue;
+
+        const component = this._commands[commandName][this._currentComponent];
+        const currentComponent = component[component.length - 1];
+
+        this._attachValidator(currentComponent, wrappedValidators, destructuringParams);
+
+      }
+
+      // Update global declaration
+      const component = this._globalDeclaration[this._currentComponent];
+      const currentComponent = component[component.length - 1];
+
+      this._attachValidator(currentComponent, wrappedValidators, destructuringParams);
+
+    }
+    // Specific component
+    else {
+
+      const component = this._commands[this._currentCommand][this._currentComponent];
+      const currentComponent = component[component.length - 1];
+
+      this._attachValidator(currentComponent, wrappedValidators, destructuringParams);
+
+    }
+
+  }
+
+  /**
+  * Mounts an action handler to the current command (or globally).
+  * @param handler The action handler to attach.
+  * @param destructuringParams Whether to use destructuring params for the validators.
+  */
+  private _action(
+    handler: Argumental.ActionHandler|Argumental.ActionHandlerWithDestructuringParams,
+    destructuringParams: boolean
+  ): void {
+
+    // Check if no command is being declared and global flag is not set
+    if ( this._currentCommand === null && ! this._global )
+      throw new Error(`ARGUMENTAL_ERROR: Cannot add action handler because no command is being defined and global definition is disabled!`);
+
+    // Add the action handler globally and append to all commands
+    if ( this._global ) {
+
+      this._globalDeclaration.actions.push({ callback: handler, destructuringParams });
+
+      for ( const commandName in this._commands ) {
+
+        // Exclude top-level
+        if ( commandName !== '' ) this._commands[commandName].actions.push({ callback: handler, destructuringParams });
+
+      }
+
+    }
+    // Add the action handler to current command
+    else {
+
+      this._commands[this._currentCommand].actions.push({ callback: handler, destructuringParams });
+
+    }
+
+  }
+
+  /**
   * Configures Argumental with the provided options.
   * @param options The configuration options.
   */
@@ -103,7 +234,7 @@ export class ArgumentalApp extends BuiltInValidators {
     this._version = version.trim();
 
     this._commands[''].options.push(this._parser.parseOption('-v --version', 'displays application version', false, null, false, undefined, true));
-    this._commands[''].actions.push(({ opts, suspend }) => {
+    this._commands[''].actions.push({ destructuringParams: true, callback: ({ opts, suspend }) => {
 
       if ( opts.version ) {
 
@@ -113,7 +244,7 @@ export class ArgumentalApp extends BuiltInValidators {
 
       }
 
-    });
+    }});
 
     return this;
 
@@ -389,62 +520,63 @@ export class ArgumentalApp extends BuiltInValidators {
   * Sets validators for an option or an argument.
   * @param validators A single or an array of validators.
   */
-  public validate(validators: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>): ArgumentalApp {
+  public validate(validators: RegExp|Argumental.Validator|Array<RegExp|Argumental.Validator>): ArgumentalApp {
 
-    // If no component selected
-    if ( ! this._currentComponent )
-      throw new Error(`ARGUMENTAL_ERROR: Cannot set validators because no option or argument is selected!`);
-
-    // If global
-    if ( this._global ) {
-
-      // Set for all options and arguments
-      for ( const commandName in this._commands ) {
-
-        if ( commandName === '' ) continue;
-
-        const component = this._commands[commandName][this._currentComponent];
-
-        if ( this._currentComponent === 'arguments' )
-          (<Argumental.CommandArgumentDeclaration>component[component.length - 1]).validators = (<Argumental.CommandArgumentDeclaration>component[component.length - 1]).validators.concat(validators);
-        else
-          (<Argumental.OptionDeclaration>component[component.length - 1]).argument.validators = (<Argumental.OptionDeclaration>component[component.length - 1]).argument.validators.concat(validators);
-
-      }
-
-      // Update global declaration
-      const component = this._globalDeclaration[this._currentComponent];
-
-      if ( this._currentComponent === 'arguments' )
-        (<Argumental.CommandArgumentDeclaration>component[component.length - 1]).validators = (<Argumental.CommandArgumentDeclaration>component[component.length - 1]).validators.concat(validators);
-      else
-        (<Argumental.OptionDeclaration>component[component.length - 1]).argument.validators = (<Argumental.OptionDeclaration>component[component.length - 1]).argument.validators.concat(validators);
-
-
-
-    }
-    // Specific component
-    else {
-
-      const component = this._commands[this._currentCommand][this._currentComponent];
-
-      if ( this._currentComponent === 'arguments' )
-        (<Argumental.CommandArgumentDeclaration>component[component.length - 1]).validators = (<Argumental.CommandArgumentDeclaration>component[component.length - 1]).validators.concat(validators);
-      else
-        (<Argumental.OptionDeclaration>component[component.length - 1]).argument.validators = (<Argumental.OptionDeclaration>component[component.length - 1]).argument.validators.concat(validators);
-
-    }
+    this._validate(validators, false);
 
     return this;
 
   }
 
   /**
-  * Alias for <code>validate()</code>
+  * Alias for <code>validate()</code>.
   */
-  public sanitize(sanitizers: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>): ArgumentalApp {
+  public sanitize(sanitizers: RegExp|Argumental.Validator|Array<RegExp|Argumental.Validator>): ArgumentalApp {
 
-    this.validate(sanitizers);
+    return this.validate(sanitizers);
+
+  }
+
+  /**
+  * Mounts an action handler to the current command (or globally).
+  * @param handler The action handler to attach.
+  */
+  public action<T=any>(handler: Argumental.ActionHandler<T>): ArgumentalApp {
+
+    this._action(handler, false);
+
+    return this;
+
+  }
+
+  /**
+  * Sets validators for an option or an argument.
+  * @param validators A single or an array of validators.
+  */
+  public validateDestruct(validators: RegExp|Argumental.ValidatorWithDestructuringParams|Array<RegExp|Argumental.ValidatorWithDestructuringParams>): ArgumentalApp {
+
+    this._validate(validators, true);
+
+    return this;
+
+  }
+
+  /**
+  * Alias for <code>validate()</code>.
+  */
+  public sanitizeDestruct(sanitizers: RegExp|Argumental.ValidatorWithDestructuringParams|Array<RegExp|Argumental.ValidatorWithDestructuringParams>): ArgumentalApp {
+
+    return this.validate(sanitizers);
+
+  }
+
+  /**
+  * Mounts an action handler to the current command (or globally).
+  * @param handler The action handler to attach.
+  */
+  public actionDestruct<T=any>(handler: Argumental.ActionHandlerWithDestructuringParams<T>): ArgumentalApp {
+
+    this._action(handler, true);
 
     return this;
 
@@ -524,40 +656,6 @@ export class ArgumentalApp extends BuiltInValidators {
 
     // Register in conflicting names
     this._conflicts.push(name.trim());
-
-    return this;
-
-  }
-
-  /**
-  * Mounts an action middleware to the current command (or globally).
-  * @param middleware The action middleware to mount.
-  */
-  public action<T=any>(handler: Argumental.ActionHandler<T>): ArgumentalApp {
-
-    // Check if no command is being declared and global flag is not set
-    if ( this._currentCommand === null && ! this._global )
-      throw new Error(`ARGUMENTAL_ERROR: Cannot add action handler because no command is being defined and global definition is disabled!`);
-
-    // Add the action handler globally and append to all commands
-    if ( this._global ) {
-
-      this._globalDeclaration.actions.push(handler);
-
-      for ( const commandName in this._commands ) {
-
-        // Exclude top-level
-        if ( commandName !== '' ) this._commands[commandName].actions.push(handler);
-
-      }
-
-    }
-    // Add the action handler to current command
-    else {
-
-      this._commands[this._currentCommand].actions.push(handler);
-
-    }
 
     return this;
 
@@ -809,7 +907,7 @@ export class ArgumentalApp extends BuiltInValidators {
         for ( const validator of argument.validators ) {
 
           // Regex validator
-          if ( validator && typeof validator === 'object' && validator.constructor === RegExp ) {
+          if ( validator instanceof RegExp ) {
 
             if ( typeof parsed.args[argument.apiName] !== 'string' || ! parsed.args[argument.apiName].match(validator) )
               return this._log.error(`Invalid value for argument ${argument.name}!`);
@@ -823,13 +921,32 @@ export class ArgumentalApp extends BuiltInValidators {
 
           try {
 
-            const newValue = await (<Argumental.Validator>validator)({
-              value: parsed.args[argument.apiName],
-              name: argument.name,
-              arg: true,
-              cmd: parsed.cmd,
-              suspend: () => { suspended = true; }
-            });
+            let newValue: any;
+
+            // Call with destructuring parameters
+            if ( validator.destructuringParams ) {
+
+              newValue = await (<Argumental.CallbackFunction<Argumental.ValidatorWithDestructuringParams>>validator).callback({
+                value: parsed.args[argument.apiName],
+                name: argument.name,
+                arg: true,
+                cmd: parsed.cmd,
+                suspend: () => { suspended = true; }
+              });
+
+            }
+            // Call with normal parameters
+            else {
+
+              newValue = await (<Argumental.CallbackFunction<Argumental.Validator>>validator).callback(
+                parsed.args[argument.apiName],
+                argument.name,
+                true,
+                parsed.cmd,
+                () => { suspended = true; }
+              );
+
+            }
 
             // Throw error if return value is an error object
             if ( newValue instanceof Error ) throw newValue;
@@ -889,7 +1006,7 @@ export class ArgumentalApp extends BuiltInValidators {
         for ( const validator of option.argument.validators ) {
 
           // Regex validator
-          if ( validator && typeof validator === 'object' && validator.constructor === RegExp ) {
+          if ( validator instanceof RegExp ) {
 
             if ( typeof value !== 'string' || ! value.match(validator) )
               return this._log.error(`Invalid value for option ${option.longName || option.shortName}!`);
@@ -903,13 +1020,32 @@ export class ArgumentalApp extends BuiltInValidators {
 
           try {
 
-            const newValue = await (<Argumental.Validator>validator)({
-              value: value,
-              name: option.longName || option.shortName,
-              arg: false,
-              cmd: parsed.cmd,
-              suspend: () => { suspended = true; }
-            });
+            let newValue: any;
+
+            // Call with destructuring parameters
+            if ( validator.destructuringParams ) {
+
+              newValue = await (<Argumental.ValidatorWithDestructuringParams>validator.callback)({
+                value: value,
+                name: option.longName || option.shortName,
+                arg: false,
+                cmd: parsed.cmd,
+                suspend: () => { suspended = true; }
+              });
+
+            }
+            // Call with normal parameters
+            else {
+
+              newValue = await (<Argumental.Validator>validator.callback)(
+                value,
+                option.longName || option.shortName,
+                false,
+                parsed.cmd,
+                () => { suspended = true; }
+              );
+
+            }
 
             // Throw error if return value is an error object
             if ( newValue instanceof Error ) throw newValue;
@@ -1004,13 +1140,30 @@ export class ArgumentalApp extends BuiltInValidators {
 
       try {
 
-        await action({
-          args: parsed.args,
-          opts: parsed.opts,
-          cmd: parsed.cmd,
-          suspend: () => { suspended = true },
-          data: actionHandlerData
-        });
+        // Call with destructuring parameters
+        if ( action.destructuringParams ) {
+
+          await (<Argumental.ActionHandlerWithDestructuringParams>action.callback)({
+            args: parsed.args,
+            opts: parsed.opts,
+            cmd: parsed.cmd,
+            suspend: () => { suspended = true },
+            data: actionHandlerData
+          });
+
+        }
+        // Call with normal parameters
+        else {
+
+          await (<Argumental.ActionHandler>action.callback)(
+            parsed.args,
+            parsed.opts,
+            parsed.cmd,
+            () => { suspended = true },
+            actionHandlerData
+          );
+
+        }
 
       }
       catch (error) {

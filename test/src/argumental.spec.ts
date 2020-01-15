@@ -58,7 +58,7 @@ describe('App', function() {
         apiName: 'filePath',
         description: 'Relative path to the script file',
         required: true,
-        validators: [app.FILE_PATH],
+        validators: [{ callback: app.FILE_PATH, destructuringParams: false }],
         default: undefined
       }
     ]);
@@ -129,7 +129,7 @@ describe('App', function() {
           apiName: 'force',
           required: false,
           default: undefined,
-          validators: [app.BOOLEAN]
+          validators: [{ callback: app.BOOLEAN, destructuringParams: false }]
         }
       }
     ]);
@@ -452,7 +452,7 @@ describe('App', function() {
     .command('convert')
     .argument('<amount>', 'The money amount in dollars (e.g. $100)', [
       /^\$\d+$/,
-      ({ value, suspend }) => {
+      (value, name, arg, cmd, suspend) => {
 
         if ( value === '$13' ) {
 
@@ -462,7 +462,7 @@ describe('App', function() {
         }
 
       },
-      ({ value }) => {
+      value => {
 
         const num = +value.match(/^\$(\d+)$/)[1];
 
@@ -474,7 +474,7 @@ describe('App', function() {
 
       }
     ])
-    .argument('[test]', null, ({ value }) => value === 'throw' ? new Error('Thrown!') : value);
+    .argument('[test]', null, value => value === 'throw' ? new Error('Thrown!') : value);
 
     await app.parse(['node', 'test', 'convert', '$135']);
 
@@ -531,19 +531,19 @@ describe('App', function() {
     .command('test')
     .option('-p --port <port_number>', null, false, [
       app.NUMBER,
-      ({ value }) => {values.push(value)}
+      value => {values.push(value)}
     ])
     .option('--logs [level]', null, false, [
       /verbose|silent/i,
-      ({ value }) => value.toUpperCase(),
-      ({ value }) => {values.push(value)}
+      value => value.toUpperCase(),
+      value => {values.push(value)}
     ])
     .option('-n <num>', null, true, [
       app.NUMBER,
-      ({ value, name, arg, cmd }) => {
+      (value, name, arg, cmd) => {
         if ( value > 100 ) throw new Error(`Invalid number ${value} for ${arg ? 'argument' : 'option'} ${name} of command ${cmd}!`);
       },
-      ({ value }) => {values.push(value)}
+      value => {values.push(value)}
     ]);
 
     await app.parse(['node', 'test', 'test', '-n', '50', '-p', 'port']);
@@ -566,7 +566,7 @@ describe('App', function() {
     expect(values).to.be.empty;
 
     let actionArgs: Argumental.ActionHandlerParams;
-    app.action(params => {actionArgs = params});
+    app.actionDestruct(params => {actionArgs = params});
 
     await app.parse(['node', 'test', 'test', '-n', '50', '--logs', 'silent']);
 
@@ -599,7 +599,7 @@ describe('App', function() {
     .option('--error [code]', null, true, app.NUMBER, true, 0)
     .option('-r <req_arg>', null, false, null, false, 'def4')
     .option('-s <req_arg>', null, false, null, false, 'def5')
-    .action(({ args, opts }) => {
+    .action((args, opts) => {
       _args = args;
       _opts = opts;
     })
@@ -639,7 +639,7 @@ describe('App', function() {
     app
     .config({ topLevelPlainHelp: false })
     .option('-v --version')
-    .action(({ opts, suspend }) => {
+    .actionDestruct(({ opts, suspend }) => {
 
       if ( opts.version ) {
 
@@ -649,7 +649,7 @@ describe('App', function() {
       }
 
     })
-    .action(({ opts, suspend }) => {
+    .actionDestruct(({ opts, suspend }) => {
 
       if ( opts.test ) {
 
@@ -729,7 +729,7 @@ describe('App', function() {
     .description('Script path')
     .option('-l')
     .required(true)
-    .action(actionHandler);
+    .actionDestruct(actionHandler);
 
     // Command: test2
     app
@@ -771,12 +771,12 @@ describe('App', function() {
             apiName: 'val',
             required: false,
             default: false,
-            validators: [app.BOOLEAN]
+            validators: [{ callback: app.BOOLEAN, destructuringParams: false }]
           }
         }
       ],
       arguments: [],
-      actions: [(<any>app)._commands[''].actions[0], actionHandler]
+      actions: [(<any>app)._commands[''].actions[0], { callback: actionHandler, destructuringParams: false }]
     });
 
     expect(commands.test).to.deep.equal({
@@ -812,7 +812,7 @@ describe('App', function() {
           required: false,
           description: 'Script type',
           default: 'ts',
-          validators: [sanitizer, validator]
+          validators: [{ callback: sanitizer, destructuringParams: false }, validator]
         },
         {
           name: 'path',
@@ -823,7 +823,7 @@ describe('App', function() {
           validators: []
         }
       ],
-      actions: [(<any>app)._commands['test'].actions[0], actionHandler]
+      actions: [(<any>app)._commands['test'].actions[0], { callback: actionHandler, destructuringParams: true }]
     });
 
     expect(commands.test2).to.deep.equal({
@@ -854,7 +854,7 @@ describe('App', function() {
             apiName: 'number',
             required: true,
             default: undefined,
-            validators: [app.NUMBER]
+            validators: [{ callback: app.NUMBER, destructuringParams: false }]
           }
         }
       ],
@@ -865,10 +865,10 @@ describe('App', function() {
           required: false,
           description: 'Script type',
           default: 'ts',
-          validators: [sanitizer, validator]
+          validators: [{ callback: sanitizer, destructuringParams: false }, validator]
         }
       ],
-      actions: [(<any>app)._commands['test2'].actions[0], actionHandler]
+      actions: [(<any>app)._commands['test2'].actions[0], { callback: actionHandler, destructuringParams: false }]
     });
 
   });
@@ -946,7 +946,7 @@ describe('App', function() {
     .option('-s')
     .required(true)
     .argument('<arg>')
-    .action(({ args, opts, cmd }) => { parsed = {args, opts, cmd}; });
+    .action((args, opts, cmd) => { parsed = {args, opts, cmd}; });
 
     await app.parse(['node', 'test', '-i']);
 
