@@ -73,7 +73,7 @@ export class ArgumentalApp extends BuiltInValidators {
   private _parser = new Parser();
   /** Logger. */
   private _log = new Logger();
-  /** Flags for displaying help without the --help option for plain top-level command. */
+  /** Flag for displaying help without the --help option for plain top-level command. */
   private _topLevelPlainHelp: boolean = true;
   /** The last command order set. */
   private _lastCommandOrder: number = 0;
