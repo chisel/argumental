@@ -1,6 +1,6 @@
 # API Reference
 
-Argumental provides a [chainable API](../#chaining-and-context) to define the whole application in one go (unless a [modular approach](../#modular-design) is desired).
+Argumental provides a [chainable API](../../../#chaining-and-context) to define the whole application in one go (unless a [modular approach](../../../#modular-design) is desired).
 
 Once imported, the following methods are available on the app object and all methods return a reference to the parent object for chaining (except for `parse()` and the [built-in validators](#built-in-validators)):
 
@@ -48,9 +48,9 @@ Defines an alias for the current command.
 ### argument(___syntax___, ___description___, ___validators___, ___defaultValue___)
 
 Defines an argument for the current command.
-  - **syntax**: The argument syntax. Use `<>` for required arguments and `[]` for optional arguments (e.g. `<file_path>`). Argument name can only contain alphanumeric characters, `-`s, and `_`s. [Rest arguments](../#rest-arguments) can be defined using `...` before the name (e.g. `[...args]` or `<...args>`).
+  - **syntax**: The argument syntax. Use `<>` for required arguments and `[]` for optional arguments (e.g. `<file_path>`). Argument name can only contain alphanumeric characters, `-`s, and `_`s. [Rest arguments](../../../#rest-arguments) can be defined using `...` before the name (e.g. `[...args]` or `<...args>`).
   - **description**: `Optional` A description to display in application help.
-  - **validators**: `Optional` A single or an array of [validators](../#validation) to validate the argument value ([destructuring parameters](../#destructuring-parameters) not supported).
+  - **validators**: `Optional` A single or an array of [validators](../../../#validation) to validate the argument value ([destructuring parameters](../../../#destructuring-parameters) not supported).
   - **defaultValue**: `Optional` The default value of the argument if value was not provided (only works with optional arguments).
 
 ### option(___syntax___, ___description___, ___required___, ___validators___, ___multi___, ___defaultValue___, ___immediate___)
@@ -59,7 +59,7 @@ Defines an option for the current command.
   - **syntax**: The option syntax. You can define a one letter shorthand (e.g. `-p`), an option name (e.g. `--port-number`), and one argument (e.g. `<port_number>`) in the syntax (e.g. `-p --port-number <port_number>`). Option name can only contain alphanumeric characters and `-`s.
   - **description**: `Optional` A description to display in application help.
   - **required**: `Optional` Indicates whether this option is required for the command.
-  - **validators**: `Optional` A single or an array of [validators](../#validation) to validate the option's argument value (only applies to options with an argument and [destructuring parameters](../#destructuring-parameters) not supported).
+  - **validators**: `Optional` A single or an array of [validators](../../../#validation) to validate the option's argument value (only applies to options with an argument and [destructuring parameters](../../../#destructuring-parameters) not supported).
   - **multi**: `Optional` Indicates whether this option can be repeated more than once (only practical for options with argument).
   - **defaultValue**: `Optional` The default value of the argument if value was not provided (only applies to options with an argument).
   - **immediate**: `Optional` Indicates if all other components (arguments, options, etc.) should be ignored in the parsing process and action handlers should be called as soon as possible when this option is provided. This behavior is desired with options such as `--help` and `--version`. Keep in mind that validators will run before the action handlers for the first encountered immediate option only.
@@ -84,7 +84,7 @@ Action handlers can return a promise for async execution.
 
 ### actionDestruct(___handler___)
 
-Same as `action()` but all parameters are provided as a single object to support [destructuring parameters](../#destructuring-parameters).
+Same as `action()` but all parameters are provided as a single object to support [destructuring parameters](../../../#destructuring-parameters).
 
 ### description(___text___)
 
@@ -113,12 +113,12 @@ Sets default value for the current argument or option.
 
 ### validate(___validators___)
 
-Adds a single or multiple [validators](../#validation) to the current option or argument.
-  - **validators**: A single or an array of [validators](../#validation) to add.
+Adds a single or multiple [validators](../../../#validation) to the current option or argument.
+  - **validators**: A single or an array of [validators](../../../#validation) to add.
 
 ### validateDestruct(___validators___)
 
-Same as `validate()` but all parameters are provided as a single object to support [destructuring parameters](../#destructuring-parameters).
+Same as `validate()` but all parameters are provided as a single object to support [destructuring parameters](../../../#destructuring-parameters).
 
 ### sanitize(___sanitizers___)
 
@@ -140,11 +140,11 @@ Parses the passed in array of command-line arguments (e.g. `process.argv`) and e
 
 ### global
 
-Turns [global declaration](../#chaining-and-context) on within the chain. Any calls to `argument()`, `option()`, and `action()` methods would define globals instead until context is changed.
+Turns [global declaration](../../../#chaining-and-context) on within the chain. Any calls to `argument()`, `option()`, and `action()` methods would define globals instead until context is changed.
 
 ### top
 
-Turns [top-level declaration](../#chaining-and-context) on within the chain. Any calls to `argument()`, `option()`, and `action()` methods would define on top-level instead until context is changed.
+Turns [top-level declaration](../../../#chaining-and-context) on within the chain. Any calls to `argument()`, `option()`, and `action()` methods would define on top-level instead until context is changed.
 
 ### config(___options___)
 
@@ -152,7 +152,7 @@ Configures Argumental with the given options. Options object can have any of the
   - **colors**: Boolean indicating if logs should be colorful (defaults to `true`).
   - **topLevelPlainHelp**: When true, application help will be displayed when the top-level command is invoked without any arguments or options (defaults to `true`).
   - **help**: A help renderer function to invoke when help must be rendered and logged to console. The function takes the following parameters:
-    - **definitions**: A key-value pair object containing all [command declarations](../blob/master/src/types.ts#L91) where key `''` refers to the top-level command.
+    - **definitions**: A key-value pair object containing all [command declarations](../../../blob/master/src/types.ts#L91) where key `''` refers to the top-level command.
     - **cmd**: The invoked command name.
 
 ## Built-in Validators
@@ -161,28 +161,28 @@ The following methods are built-in validators that should be used by `validate()
 
 ### STRING
 
-Built-in [validator](../#validation) which validates the argument value as string.
+Built-in [validator](../../../#validation) which validates the argument value as string.
 
 ### NUMBER
 
-Built-in [validator](../#validation) which validates the argument value as a number (also converts the input to number).
+Built-in [validator](../../../#validation) which validates the argument value as a number (also converts the input to number).
 
 ### BOOLEAN
 
-Built-in [validator](../#validation) which validates the argument value as boolean (also converts the input to boolean).
+Built-in [validator](../../../#validation) which validates the argument value as boolean (also converts the input to boolean).
 
 ### FILE_PATH
 
-Built-in [validator](../#validation) which validates the argument value as a file path (checks for file existence and read access synchronously).
+Built-in [validator](../../../#validation) which validates the argument value as a file path (checks for file existence and read access synchronously).
 
 ### STRINGS
 
-Built-in [validator](../#validation) which validates the rest argument value as multiple strings.
+Built-in [validator](../../../#validation) which validates the rest argument value as multiple strings.
 
 ### NUMBERS
 
-Built-in [validator](../#validation) which validates the rest argument value as multiple numbers (also converts the input to number).
+Built-in [validator](../../../#validation) which validates the rest argument value as multiple numbers (also converts the input to number).
 
 ### BOOLEANS
 
-Built-in [validator](../#validation) which validates the rest argument value as booleans (also converts the input to boolean).
+Built-in [validator](../../../#validation) which validates the rest argument value as booleans (also converts the input to boolean).
