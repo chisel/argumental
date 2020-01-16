@@ -22,7 +22,14 @@
     "argument-parser",
     "cli-app",
     "terminal",
-    "console"
+    "console",
+    "fast-dev",
+    "fast-develop",
+    "validation",
+    "validators",
+    "middleware",
+    "typescript",
+    "javascript"
   ],
   "author": "Ramtin Soltani <ramtin@chiselpowered.com>",
   "license": "MIT",
