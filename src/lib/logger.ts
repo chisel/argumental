@@ -4,9 +4,7 @@ import { Argumental } from '../types';
 
 export class Logger {
 
-  private readonly MESSAGES_TEMPLATE = `\n\n{{MESSAGES}}\n`;
-  private readonly SINGLE_MESSAGE_TEMPLATE = `   {{MESSAGE}}\n`;
-  private readonly HELP_SECTION_TEMPLATE = `\n\n   {{TITLE}}\n\n      `;
+  private readonly PADDING: number = 3;
   /** Detected application name. */
   private _appName: string = null;
   /** Controls colored logging. */
@@ -15,22 +13,123 @@ export class Logger {
   private _customHelp: Function = null;
 
   /**
-  * Builds the final message using the templates.
-  * @param messages An array of string messages.
+  * Returns the options signature of a command.
+  * @param command A command definition.
   */
-  private _applyMessageTemplate(messages: string[]): string {
+  private _getOptionsSignature(command: Argumental.CommandDeclaration): string {
 
-    let final: string = '';
+    for ( const option of command.options ) {
 
-    for ( const message of messages ) {
-
-      final += this.SINGLE_MESSAGE_TEMPLATE.replace('{{MESSAGE}}', message);
+      if ( option.required ) return `<options>`;
 
     }
 
-    final = this.MESSAGES_TEMPLATE.replace('{{MESSAGES}}', final);
+    return chalk.italic('[options]');
 
-    return final;
+  }
+
+  /**
+  * Returns a list of named argument signatures.
+  * @param command A command definition.
+  */
+  private _getArgumentsSignatureList(command: Argumental.CommandDeclaration): string[] {
+
+    const list: string[] = [];
+
+    for ( const argument of command.arguments ) {
+
+      if ( argument.required ) list.push(`<${argument.rest ? '...' : ''}${argument.name}>`);
+      else list.push(chalk.italic(`[${argument.rest ? '...' : ''}${argument.name}]`));
+
+    }
+
+    return list;
+
+  }
+
+  /**
+  * Determines if any arguments are defined for any command.
+  * @param definitions List of command declarations.
+  */
+  private _doArgumentsExist(definitions: Argumental.List<Argumental.CommandDeclaration>): boolean {
+
+    for ( const commandName in definitions ) {
+
+      if ( definitions[commandName].arguments.length ) return true;
+
+    }
+
+    return false;
+
+  }
+
+  /**
+  * Returns the longest string length.
+  * @param strings Array of strings.
+  */
+  private _getLongest(strings: string[]): number {
+
+    return Math.max(...strings.map(str => str.length));
+
+  }
+
+  /**
+  * Returns padding based on logger configuration and level.
+  * @param level The padding level.
+  */
+  private _pad(level: number = 1): string {
+
+    return ' '.repeat(this.PADDING * level);
+
+  }
+
+  /**
+  * Returns option syntax from definition.
+  * @param option The option definition.
+  */
+  private _getOptionSyntax(option: Argumental.OptionDeclaration): any {
+
+    const syntax: any = {};
+    const segments: string[] = [];
+
+    if ( option.shortName ) {
+
+      syntax.short = `-${option.shortName}`;
+      segments.push(syntax.short);
+
+    }
+    if ( option.longName ) {
+
+      syntax.long = `--${option.longName}`;
+      segments.push(syntax.long);
+
+    }
+    if ( option.argument ) {
+
+      syntax.arg = `${option.required ? '<name>' : '[name]'}`.replace('name', option.argument.name);
+      segments.push(syntax.arg);
+
+    }
+
+    syntax.full = segments.join(' ');
+
+    return syntax;
+
+  }
+
+  /**
+  * Determines if command has any multi options.
+  * @param command The command definition.
+  */
+  private _hasMultiOption(command: Argumental.CommandDeclaration): boolean {
+
+    for ( const option of command.options ) {
+
+      if ( option.multi ) return true;
+
+    }
+
+    return false;
 
   }
 
@@ -68,13 +167,15 @@ export class Logger {
 
     let color = new chalk.Instance(chalkOptions);
 
+    console.log('');
+
     console.error(
-      this._applyMessageTemplate(
-        messages
-        .map(message => color.redBright.bold(message instanceof Error ? message.message : message))
-        .concat(`Run ${color.bold(`${this._appName + ' ' || ''}--help`)} to display usage info`)
-      )
+      ...messages
+      .map(message => color.redBright.bold(message instanceof Error ? this._pad() + message.message : this._pad() + message))
+      .concat(`\n${this._pad()}Run ${color.bold(`${this._appName + ' ' || ''}--help`)} to display usage info`)
     );
+
+    console.log('');
 
   }
 
@@ -94,36 +195,139 @@ export class Logger {
     if ( ! this._colors ) chalkOptions = { level: 0 };
 
     let color = new chalk.Instance(chalkOptions);
-    let topLevelOnly = false, topLevelArguments = false;
-    let text: string = '';
-
     // Determine top-level usage signature
-    topLevelOnly = _.keys(definitions).length === 1;
-    topLevelArguments = !! definitions[''].arguments.length;
+    let topLevelOnly = _.keys(definitions).length === 1;
+    let usageSection: string, commandsSection: string, argumentsSection: string, optionsSection: string;
+
+    // Render usage section
+    usageSection = color.white.bold('USAGE: ');
 
     // If top-level
     if ( cmd === '' ) {
 
-      // Add signature
-      text =
-      color`\n\n   {white.bold USAGE:}\n\n      ` +
-      color`${this._appName ? this._appName + ' ' : ''}${! topLevelOnly ? color`{blueBright <command>} ` : (topLevelArguments ? color`{magenta <arguments>} ` : '')}{yellow.italic [options]}`;
+      let segments: string[] = [];
+
+      if ( this._appName ) segments.push(this._appName);
+
+      // Generic signature
+      if ( definitions[''].original ) {
+
+        if ( ! topLevelOnly ) segments.push(color.blueBright('<command>'));
+        if ( this._doArgumentsExist(definitions) ) segments.push(color.magenta(`<arguments>`));
+
+        segments.push(color.yellow.italic('[options]'));
+
+      }
+      // Top-level specific signature
+      else {
+
+        segments = segments.concat(this._getArgumentsSignatureList(definitions['']).map(sig => chalk.magenta(sig)));
+        segments.push(color.yellow(this._getOptionsSignature(definitions[''])));
+
+      }
+
+      usageSection += segments.join(' ');
 
     }
     // Command level
     else {
 
-      // Add signature
-      text =
-      color`\n\n   {white.bold USAGE:}\n\n      ` +
-      color`${this._appName ? this._appName + ' ' : ''}{blueBright ${cmd}} ${
-        definitions[cmd].arguments.map(arg => arg.required ? color`{magenta <${arg.name}>}` : color`{magenta [${arg.name}]}`).join(' ') +
-        (definitions[cmd].arguments.length ? ' ' : '')
-      }{yellow.italic [options]}`;
+      let segments: string[] = [];
+
+      if ( this._appName ) segments.push(this._appName);
+
+      segments.push(color.blueBright(cmd));
+      segments = segments.concat(this._getArgumentsSignatureList(definitions[cmd]).map(sig => chalk.magenta(sig)));
+      segments.push(color.yellow(this._getOptionsSignature(definitions[cmd])));
+
+      usageSection += segments.join(' ');
 
     }
 
-    console.log(text + '\n\n');
+    // Render commands section
+    if ( cmd === '' && _.keys(definitions).length > 1 ) {
+
+      commandsSection = color.white.bold('COMMANDS:\n\n');
+
+      const longest = this._getLongest(_.keys(definitions).map(name => [name, ...definitions[name].aliases].join('|')));
+
+      for ( const command of _.values(definitions).sort((a, b) => a.order - b.order) ) {
+
+        if ( command.name === '' ) continue;
+
+        const commandRightPad = ' '.repeat(longest - [command.name, ...command.aliases].join('|').length);
+        const coloredSyntax = [color.blueBright(command.name), ...command.aliases.map(alias => color.blueBright(alias))].join(color.dim('|'));
+
+        // Command name
+        commandsSection += `${this._pad(2)}${coloredSyntax}${commandRightPad}`;
+        // Command description
+        if ( command.description ) commandsSection += `${this._pad()}${command.description}`;
+
+        commandsSection += '\n';
+
+      }
+
+    }
+
+    // Render arguments section
+    // If not generic top-level
+    if ( (cmd !== '' || ! definitions[''].original) && definitions[cmd].arguments.length ) {
+
+      argumentsSection = color.white.bold('ARGUMENTS:\n\n');
+
+      const longest = this._getLongest(definitions[cmd].arguments.map(arg => arg.name));
+
+      for ( const argument of definitions[cmd].arguments ) {
+
+        // Argument name
+        argumentsSection += `${this._pad(2)}${color.magenta((argument.rest ? '...' : '') + argument.name.padEnd(longest))}`;
+        // Argument requirement
+        argumentsSection += `${this._pad()}${argument.required ? color.bold('required') : color.italic.dim('optional')}`;
+        // Argument description
+        if ( argument.description ) argumentsSection += `${this._pad()}${argument.description}`;
+
+        argumentsSection += '\n';
+
+      }
+
+    }
+
+    // Render options section
+    optionsSection = color.white.bold('OPTIONS:\n\n');
+
+    const longest = this._getLongest(definitions[cmd].options.map(opt => this._getOptionSyntax(opt).full));
+    const anyMulti = this._hasMultiOption(definitions[cmd]);
+
+    for ( const option of definitions[cmd].options ) {
+
+      // Option syntax
+      const syntax = this._getOptionSyntax(option);
+      const syntaxRightPad = ' '.repeat(longest - syntax.full.length);
+
+      optionsSection += `${this._pad(2)}${syntax.short ? color.yellow(syntax.short) + ' ' : ''}${syntax.long ? color.yellow(syntax.long) + ' ' : ''}${syntax.arg ? color.magenta(syntax.arg) + ' ' : ''}${syntaxRightPad}`;
+      optionsSection = optionsSection.substr(0, optionsSection.length - 1);
+
+      // Option requirement
+      optionsSection += `${this._pad()}${option.required ? color.bold('required') : color.italic.dim('optional')}`;
+      // Option repeatable (multi)
+      if ( anyMulti ) optionsSection += `${this._pad()}${option.multi ? color.greenBright('repeatable') : '          '}`;
+      // Option description
+      if ( option.description ) optionsSection += `${this._pad()}${option.description}`;
+
+      optionsSection += '\n';
+
+    }
+
+    console.log('\n');
+
+    console.log(`${this._pad()}${usageSection}\n`);
+    if ( commandsSection ) console.log(`${this._pad()}${commandsSection}`);
+    if ( argumentsSection ) console.log(`${this._pad()}${argumentsSection}`);
+    console.log(`${this._pad()}${optionsSection}`);
+
+    if ( ! topLevelOnly && cmd === '' ) console.log(`${this._pad()}Run ${this._appName ? this._appName + ' ' : ''}${color.blueBright('<command>')} ${color.yellow('--help')} to view command-specific help.\n`);
+
+    console.log('');
 
   }
 

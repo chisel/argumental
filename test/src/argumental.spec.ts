@@ -914,7 +914,9 @@ describe('App', function() {
         }
       ],
       arguments: [],
-      actions: [(<any>app)._commands[''].actions[0], { callback: actionHandler, destructuringParams: false }]
+      actions: [(<any>app)._commands[''].actions[0], { callback: actionHandler, destructuringParams: false }],
+      original: false,
+      order: 0
     });
 
     expect(commands.test).to.deep.equal({
@@ -963,7 +965,8 @@ describe('App', function() {
           validators: []
         }
       ],
-      actions: [(<any>app)._commands['test'].actions[0], { callback: actionHandler, destructuringParams: true }]
+      actions: [(<any>app)._commands['test'].actions[0], { callback: actionHandler, destructuringParams: true }],
+      order: 1
     });
 
     expect(commands.test2).to.deep.equal({
@@ -1009,7 +1012,8 @@ describe('App', function() {
           validators: [{ callback: sanitizer, destructuringParams: false }, validator]
         }
       ],
-      actions: [(<any>app)._commands['test2'].actions[0], { callback: actionHandler, destructuringParams: false }]
+      actions: [(<any>app)._commands['test2'].actions[0], { callback: actionHandler, destructuringParams: false }],
+      order: 2
     });
 
   });
@@ -1060,7 +1064,9 @@ describe('App', function() {
             argument: null
           }
         ],
-        actions: [(<any>app)._commands[''].actions[0]]
+        actions: [(<any>app)._commands[''].actions[0]],
+        original: false,
+        order: 0
       }
     });
 

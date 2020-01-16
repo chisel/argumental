@@ -54,7 +54,9 @@ export class ArgumentalApp extends BuiltInValidators {
       aliases: [],
       arguments: [],
       options: [],
-      actions: []
+      actions: [],
+      original: true,
+      order: 0
     }
   };
   /** Current command declaration. */
@@ -73,6 +75,8 @@ export class ArgumentalApp extends BuiltInValidators {
   private _log = new Logger();
   /** Flags for displaying help without the --help option for plain top-level command. */
   private _topLevelPlainHelp: boolean = true;
+  /** The last command order set. */
+  private _lastCommandOrder: number = 0;
 
   /**
   * Attaches an array of validators to the given component (argument or option's argument).
@@ -202,6 +206,10 @@ export class ArgumentalApp extends BuiltInValidators {
       this._commands[this._currentCommand].actions.push({ callback: handler, destructuringParams });
 
     }
+
+    // If top-level, set original to false
+    if ( this._currentCommand === '' && ! this._global )
+      this._commands[this._currentCommand].original = false;
 
   }
 
@@ -617,7 +625,8 @@ export class ArgumentalApp extends BuiltInValidators {
       aliases: [],
       arguments: _.cloneDeep(this._globalDeclaration.arguments),
       options: _.cloneDeep(this._globalDeclaration.options),
-      actions: _.cloneDeep(this._globalDeclaration.actions)
+      actions: _.cloneDeep(this._globalDeclaration.actions),
+      order: ++this._lastCommandOrder
     };
 
     // Register in conflicting names
@@ -656,6 +665,10 @@ export class ArgumentalApp extends BuiltInValidators {
 
     // Register in conflicting names
     this._conflicts.push(name.trim());
+
+    // If top-level, set original to false
+    if ( this._currentCommand === '' && ! this._global )
+      this._commands[this._currentCommand].original = false;
 
     return this;
 
@@ -735,6 +748,10 @@ export class ArgumentalApp extends BuiltInValidators {
     // Update current component
     this._currentComponent = 'arguments';
 
+    // If top-level, set original to false
+    if ( this._currentCommand === '' && ! this._global )
+      this._commands[this._currentCommand].original = false;
+
     return this;
 
   }
@@ -794,6 +811,10 @@ export class ArgumentalApp extends BuiltInValidators {
 
     // Update current component
     this._currentComponent = 'options';
+
+    // If top-level, set original to false
+    if ( this._currentCommand === '' && ! this._global )
+      this._commands[this._currentCommand].original = false;
 
     return this;
 

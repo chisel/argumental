@@ -102,6 +102,10 @@ export namespace Argumental {
     options: OptionDeclaration[];
     /** Action handlers of this command. */
     actions: CallbackFunction<ActionHandler|ActionHandlerWithDestructuringParams>[];
+    /** Determines whether this command definition is in its original state (used for top command). */
+    original?: boolean;
+    /** Order number to sort commands with. */
+    order: number;
 
   }
 

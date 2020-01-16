@@ -641,7 +641,8 @@ describe('Parser', function() {
             immediate: false
           }
         ],
-        actions: []
+        actions: [],
+        order: 1
       }
     };
 
@@ -706,7 +707,9 @@ describe('Parser', function() {
         aliases: [],
         options: [],
         arguments: [],
-        actions: []
+        actions: [],
+        original: true,
+        order: 0
       },
       'new script': {
         name: 'new script',
@@ -744,7 +747,8 @@ describe('Parser', function() {
             immediate: false
           }
         ],
-        actions: []
+        actions: [],
+        order: 1
       }
     };
 
