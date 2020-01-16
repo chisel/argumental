@@ -1,4 +1,4 @@
-![Argumental](./images/display-image.png)
+<img src="./images/display-image.png" style="max-width: calc(100% + 112px) !important; margin: 0 -56px !important;">
 
 # Index
 
