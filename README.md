@@ -490,6 +490,9 @@ import './global.module';
 import './cmd1.module';
 
 app
+// Define top-level command
+.top
+.option('-o --option') // Without `.top` this line would have referred to cmd1 command (last context)
 // Set version
 .version('1.0.0')
 // Start the app
