@@ -6,7 +6,7 @@
   "scripts": {
     "start": "./node_modules/typescript/bin/tsc --build",
     "test": "npm start && ./node_modules/typescript/bin/tsc -p test/tsconfig.json && ./node_modules/mocha/bin/mocha --require source-map-support/register ./test/dist/main.spec.js",
-    "docs": "./node_modules/typedoc/bin/typedoc src --out docs --name \"Argumental Developer Documentation\" --tsconfig ./tsconfig.json --excludeExternals --readme none",
+    "docs": "./node_modules/typedoc/bin/typedoc src --out docs/dev --name \"Argumental Developer Documentation\" --tsconfig ./tsconfig.json --excludeExternals --readme none",
     "prepublishOnly": "npm start"
   },
   "repository": {
