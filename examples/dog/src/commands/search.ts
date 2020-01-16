@@ -5,9 +5,9 @@ import chalk from 'chalk';
 app
 .command('search')
 .alias('s')
-.description('Searches for a dog breed')
+.description('searches for a dog breed')
 
-.argument('<...query>', 'A breed name to search for')
+.argument('<...query>', 'breed name to search for')
 // Join all values
 .sanitize(values => values.join(' '))
 // Guard against empty strings

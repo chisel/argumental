@@ -6,9 +6,9 @@ import terminalImage from 'terminal-image';
 app
 .command('image')
 .alias('i')
-.description('Displays an image of a dog breed')
+.description('displays an image of a dog breed')
 
-.argument('<...query>', 'A breed name to search for')
+.argument('<...query>', 'breed name to search for')
 // Join all values
 .sanitize(values => values.join(' '))
 // Guard against empty strings

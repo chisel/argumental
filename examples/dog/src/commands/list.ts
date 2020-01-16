@@ -5,21 +5,21 @@ import chalk from 'chalk';
 app
 .command('list')
 .alias('l')
-.description('Lists all known dog breeds')
+.description('lists all known dog breeds')
 
-.option('-p --page <page_number>', 'Pagination')
+.option('-p --page <page_number>', 'page number for pagination')
 // Page number must be a valid number
 .validate(app.NUMBER)
 // Cast into string (since request's query params must be string only)
 .sanitize(value => value + '')
 .default('0')
 
-.option('-l --limit <limit_count>', 'Breeds per page')
+.option('-l --limit <limit_count>', 'breeds per page')
 .validate(app.NUMBER)
 .sanitize(value => value + '')
 .default('5')
 
-.option('-i --imperial', 'Displays imperial units')
+.option('-i --imperial', 'displays imperial units')
 
 .actionDestruct<ActionData>(async ({ opts, data }) => {
 
