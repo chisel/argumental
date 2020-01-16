@@ -5,6 +5,36 @@ import { Argumental } from '../types';
 export class Parser {
 
   /**
+  * Casts all parsed values to string (except for booleans).
+  * @param parsed Minimist parsed arguments.
+  */
+  private _stringifyMinimist(parsed: minimist.ParsedArgs): minimist.ParsedArgs {
+
+    for ( const key in parsed ) {
+
+      // If boolean
+      if ( typeof parsed[key] === 'boolean' ) continue;
+      if ( typeof parsed[key] === 'string' ) continue;
+      if ( typeof parsed[key] === 'number' ) parsed[key] = parsed[key] + '';
+      if ( this._isArray(parsed[key]) ) {
+
+        for ( let i = 0; i < parsed[key].length; i++ ) {
+
+          if ( typeof parsed[key][i] === 'boolean' ) continue;
+          if ( typeof parsed[key][i] === 'string' ) continue;
+          if ( typeof parsed[key][i] === 'number' ) parsed[key][i] = parsed[key][i] + '';
+
+        }
+
+      }
+
+    }
+
+    return parsed;
+
+  }
+
+  /**
   * Determines if value is an array.
   * @param value The value to check.
   */
@@ -109,14 +139,28 @@ export class Parser {
   /**
   * Parses an argument based on the given syntax.
   * @param syntax The argument syntax.
+  * @param command Whether this argument belongs to a command or an option.
   * @param validators A single or an array of validators.
   * @param defaultValue Argument's default value.
   */
-  public parseArgument(syntax: string, validators?: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, defaultValue?: string|boolean|number): Argumental.ArgumentDeclaration {
+  public parseArgument<T=Argumental.ArgumentDeclaration>(syntax: string, command: boolean, validators?: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, defaultValue?: string|boolean|number): T {
 
     // Check if argument has wrong syntax or contains invalid characters
-    if ( ! syntax.trim().match(/^(<[a-z0-9-_]+>)|(\[[a-z0-9-_]+\])$/i) )
+    if ( ! command && ! syntax.trim().match(/^(<[a-z0-9-_]+>)|(\[[a-z0-9-_]+\])$/i) )
       throw new Error(`ARGUMENTAL_ERROR: Argument ${syntax.trim()} has invalid syntax or contains invalid characters!`);
+
+    if ( command && ! syntax.trim().match(/^(<(\.\.\.)?[a-z0-9-_]+>)|(\[(\.\.\.)?[a-z0-9-_]+\])$/i) )
+      throw new Error(`ARGUMENTAL_ERROR: Argument ${syntax.trim()} has invalid syntax or contains invalid characters!`);
+
+    // Set rest flag
+    let rest = false;
+
+    if ( command && syntax.trim().match(/^[<\[]\.\.\./i) ) {
+
+      rest = true;
+      syntax = syntax.trim().replace('...', '');
+
+    }
 
     // Check if argument name has consecutive - or _s, or it starts or ends with - or _
     const name = syntax.trim().match(/^[<\[]([a-z0-9-_]+)[>\]]$/i)[1].toLowerCase();
@@ -124,13 +168,15 @@ export class Parser {
     if ( name.includes('__') || name.includes('--') || (name.includes('-') && name.includes('_')) || ['-', '_'].includes(name[0]) || ['-', '_'].includes(name[name.length - 1]) )
       throw new Error(`ARGUMENTAL_ERROR: Argument ${name} has invalid name!`);
 
-    const argument: Argumental.ArgumentDeclaration = {
-      name: name,
+    const argument: any = {
+      name,
       apiName: _.camelCase(name),
       required: syntax.trim()[0] === '<',
       validators: [],
       default: defaultValue
     };
+
+    if ( command ) argument.rest = rest;
 
     // Sanitize validators array
     if ( validators && (typeof validators !== 'object' || validators.constructor !== Array) ) (<any>validators) = [validators];
@@ -196,7 +242,7 @@ export class Parser {
     // Parse argument
     const argumentMatch = syntax.trim().match(/(<[a-z0-9-_]+>)|(\[[a-z0-9-_]+\])$/i);
 
-    if ( argumentMatch ) option.argument = this.parseArgument(argumentMatch[1] || argumentMatch[2], validators, defaultValue);
+    if ( argumentMatch ) option.argument = this.parseArgument(argumentMatch[1] || argumentMatch[2], false, validators, defaultValue);
 
     // Check if option has wrong syntax or contains invalid characters
     const invalidLongName = option.longName && (option.longName.includes('--') || option.longName[0] === '-' || option.longName[option.longName.length - 1] === '-');
@@ -265,13 +311,33 @@ export class Parser {
     }
 
     // Parse arguments using Minimist
-    const parsed = minimist(remainingArgs || args, minimistConfig);
+    const parsed = this._stringifyMinimist(minimist(remainingArgs || args, minimistConfig));
     const parsedArgs: Argumental.ParsedArguments = { cmd: detectedCommand, args: {}, opts: {} };
 
     // Add arguments
     for ( const argument of commands[detectedCommand].arguments ) {
 
-      parsedArgs.args[argument.apiName] = parsed._.shift() || null;
+      // Rest argument
+      if ( argument.rest ) {
+
+        if ( ! parsed._.length ) {
+
+          parsedArgs.args[argument.apiName] = null;
+
+        }
+        else {
+
+          parsedArgs.args[argument.apiName] = parsed._;
+          parsed._ = [];
+
+        }
+
+      }
+      else {
+
+        parsedArgs.args[argument.apiName] = parsed._.shift() || null;
+
+      }
 
     }
 

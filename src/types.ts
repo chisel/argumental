@@ -4,7 +4,7 @@ export namespace Argumental {
   * Action handler with destructuring params.
   * @param params Action handler parameters object.
   */
-  export type ActionHandlerWithDestructuringParams<T=any> = (params: ActionHandlerParams<T>) => void|Promise<void>;
+  export type ActionHandlerWithDestructuringParams<T=any> = (params: ActionHandlerParams<T>) => any|Promise<any>;
 
   /**
   * Action handler.
@@ -14,7 +14,7 @@ export namespace Argumental {
   * @param suspend Suspends next actions handlers (if any).
   * @param data An object shared between action handlers to attach any data to.
   */
-  export type ActionHandler<T=any> = (args: List<any>, opts: List<any>, cmd: string, suspend: () => void, data: T) => void|Promise<void>;
+  export type ActionHandler<T=any> = (args: List<any>, opts: List<any>, cmd: string, suspend: () => void, data: T) => any|Promise<any>;
 
   export interface ActionHandlerParams<T=any> {
 
@@ -145,6 +145,8 @@ export namespace Argumental {
 
     /** Argument description. */
     description: string;
+    /** Whether this argument captures all values provided on and after. */
+    rest: boolean;
 
   }
 
@@ -158,12 +160,12 @@ export namespace Argumental {
 
     cmd: string;
     /** NOTE: Missing arguments would be null. */
-    args: List<string>;
+    args: List<string|string[]>;
     /** NOTE: For options with argument, missing options would be undefined,
     options with missing argument value would be null, and string otherwise.
     * For options without argument, missing options would be false, and true otherwise.
     */
-    opts: List<boolean|string|Array<string>>;
+    opts: List<boolean|string|string[]>;
 
   }
 

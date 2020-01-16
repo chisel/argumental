@@ -28,15 +28,19 @@
       - [NUMBER](#number)
       - [BOOLEAN](#boolean)
       - [FILE_PATH](#file_path)
+      - [STRINGS](#strings)
+      - [NUMBERS](#numbers)
+      - [BOOLEANS](#booleans)
   5. [Chaining And Context](#chaining-and-context)
   6. [Validation](#validation)
-  7. [Destructuring Parameters](#destructuring-parameters)
-  8. [Modular Design](#modular-design)
-  9. [Extras](#extras)
-  10. [Examples](#examples)
-  11. [Tests](#tests)
-  12. [Developer Documentation](#developer-documentation)
-  13. [Building The Source](#building-the-source)
+  7. [Rest Arguments](#rest-arguments)
+  8. [Destructuring Parameters](#destructuring-parameters)
+  9. [Modular Design](#modular-design)
+  10. [Extras](#extras)
+  11. [Examples](#examples)
+  12. [Tests](#tests)
+  13. [Developer Documentation](#developer-documentation)
+  14. [Building The Source](#building-the-source)
 
 # About
 
@@ -111,7 +115,7 @@ Defines an alias for the current command.
 ### argument(___syntax___, ___description___, ___validators___, ___defaultValue___)
 
 Defines an argument for the current command.
-  - **syntax**: The argument syntax. Use `<>` for required arguments and `[]` for optional arguments (e.g. `<file_path>`). Argument name can only contain alphanumeric characters, `-`s, and `_`s.
+  - **syntax**: The argument syntax. Use `<>` for required arguments and `[]` for optional arguments (e.g. `<file_path>`). Argument name can only contain alphanumeric characters, `-`s, and `_`s. [Rest arguments](#rest-arguments) can be defined using `...` before the name (e.g. `[...args]` or `<...args>`).
   - **description**: `Optional` A description to display in application help.
   - **validators**: `Optional` A single or an array of [validators](#validation) to validate the argument value ([destructuring parameters](#destructuring-parameters) not supported).
   - **defaultValue**: `Optional` The default value of the argument if value was not provided (only works with optional arguments).
@@ -131,7 +135,8 @@ Defines an option for the current command.
 
 Defines an action for the current command.
   - **handler**: An action handler function which takes the following parameters:
-    - **args**: A key-value pair object containing the passed-in arguments (uses camel-cased argument names as keys).
+    - **args**: A key-value pair object containing the passed-in arguments (uses camel-cased argument names as keys).  
+    Missing arguments' values are `null` while rest arguments' values are an array of values.
     - **opts**: A key-value pair object containing the passed-in options (uses the shorthand and camel-cased option names as keys).  
     If option definition didn't contain an argument, values would be booleans instead.   
     If option defined argument, value would be `undefined` if option is not provided, `null` if option provided wihtout the argument's value, and the actual argument value otherwise.  
@@ -219,25 +224,29 @@ Configures Argumental with the given options. Options object can have any of the
 
 Built-in [validator](#validation) which validates the argument value as string.
 
-> **NOTE:** Built-in validators cannot be used on `validateDestruct()` and `sanitizeDestruct()` methods.
-
 ### NUMBER
 
 Built-in [validator](#validation) which validates the argument value as a number (also converts the input to number).
-
-> **NOTE:** Built-in validators cannot be used on `validateDestruct()` and `sanitizeDestruct()` methods.
 
 ### BOOLEAN
 
 Built-in [validator](#validation) which validates the argument value as boolean (also converts the input to boolean).
 
-> **NOTE:** Built-in validators cannot be used on `validateDestruct()` and `sanitizeDestruct()` methods.
-
 ### FILE_PATH
 
 Built-in [validator](#validation) which validates the argument value as a file path (checks for file existence and read access synchronously).
 
-> **NOTE:** Built-in validators cannot be used on `validateDestruct()` and `sanitizeDestruct()` methods.
+### STRINGS
+
+Built-in [validator](#validation) which validates the rest argument value as multiple strings.
+
+### NUMBERS
+
+Built-in [validator](#validation) which validates the rest argument value as multiple numbers (also converts the input to number).
+
+### BOOLEANS
+
+Built-in [validator](#validation) which validates the rest argument value as booleans (also converts the input to boolean).
 
 # Chaining And Context
 
@@ -306,7 +315,13 @@ Validators are functions that take a user-provided argument value and check it b
 If a validator returns a value, that value will overwrite user's original value (as long as the returning value is not an error object). This behavior allows type casting and input sanitization.
 
 Validator functions take the following parameters:
+  - **value**: The argument or option's value at its current state.
+  - **name**: The argument or option name.
+  - **arg**: Boolean indicating whether value belongs to an argument or an option.
+  - **cmd**: The name of the invoked command.
+  - **suspend**: A function to call when suspending next validators from running.
 
+> **NOTE:** If validator function is provided through `validateDestruct()` or `sanitizeDestruct()`, all parameters will be provided inside one object to enable [destructuring](destructuring-parameters).
 
 ```js
 app
@@ -343,6 +358,8 @@ app
 .parse(process.argv);
 ```
 
+> **NOTE:** Built-in validators cannot be used on `validateDestruct()` and `sanitizeDestruct()` methods.
+
 For convenience, you can provide regular expressions instead of validator functions to validate string values. Keep in mind that if the value has changed because of a previous validator to anything other than a string, the regular expression will fail the validation.
 
 ```js
@@ -354,6 +371,30 @@ app
 ```
 
 > **NOTE:** Validators won't run when no value is provided for optional arguments or if defined on boolean options.
+
+# Rest Arguments
+
+Rest arguments capture all values into one array and are useful for use cases where multiple values is expected and the number of provided values is unknown.
+
+```ts
+app
+.argument('<...args>')
+.action(args => {
+
+  // Example: app arg1 arg2 arg3
+  console.log(args); // { args: ['arg1', 'arg2', 'arg3'] }
+
+})
+.parse(process.argv);
+```
+
+Things to keep in mind about rest arguments:
+  - No arguments can be defined after a rest argument.
+  - If rest argument is required, app will enforce users to provide at least one value for the argument.
+  - Regular expression [validators](#validation) will run for each value provided for the rest argument, while function [validators](#validation) will run on the whole array of values.
+  - Default value will be set instead of the whole array and not each value in the array.
+  - Options do not support rest arguments. If multiple values is expected for an option, use the [`multi` API](#multivalue) instead.
+  - When using the built-in validators, use the plural version for rest arguments (e.g. `app.STRINGS` instead of `app.STRING`).
 
 # Destructuring Parameters
 
@@ -475,6 +516,39 @@ To overwrite `--help`, provide the help renderer function using the [`config()` 
 app
 .configure({
   help: (definitions, cmd) => console.log('Custom help')
+})
+.parse(process.argv);
+```
+
+---
+
+Rest arguments can be used to eliminate the need to wrap values with `""` when they contain spaces.
+
+The following app defines full name as one argument, which means users must wrap the name with `""`:
+```js
+app
+.command('person')
+.argument('<full_name>')
+.action(args => {
+
+  // Example: person "John Smith"
+  console.log(args.fullName); // John Smith
+
+})
+.parse(process.argv);
+```
+
+This can be improved by using a rest argument:
+```js
+app
+.command('person')
+.argument('<...full_name>')
+.sanitize(value => value.join(' '))
+.action(args => {
+
+  // Example: person John Smith
+  console.log(args.fullName); // John Smith
+
 })
 .parse(process.argv);
 ```

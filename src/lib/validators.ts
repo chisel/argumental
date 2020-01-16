@@ -32,6 +32,61 @@ export class BuiltInValidators {
 
   };
 
+  /** Checks if all values of the array are strings. */
+  STRINGS: Argumental.Validator = (value, name, arg) => {
+
+    const errorMessage = `Invalid value for ${arg ? 'argument' : 'option'} ${name}!\n   Value must be multiple strings.`;
+
+    if ( ! value || typeof value !== 'object' || value.constructor !== Array )
+      throw new Error(errorMessage);
+
+    for ( const v of value ) {
+
+      if ( typeof v !== 'string' )
+        throw new Error(errorMessage);
+
+    }
+
+  };
+
+  /** Checks if all values of the array are numbers or can be converted to number. Casts all values to number if passed. */
+  NUMBERS: Argumental.Validator = (value, name, arg) => {
+
+    const errorMessage = `Invalid value for ${arg ? 'argument' : 'option'} ${name}!\n   Value must be multiple numbers.`;
+
+    if ( ! value || typeof value !== 'object' || value.constructor !== Array )
+      throw new Error(errorMessage);
+
+    for ( const v of value ) {
+
+      if ( (typeof v !== 'number' && typeof v !== 'string') || (typeof v === 'string' && ! v.trim().match(/^\d+$/)) )
+        throw new Error(errorMessage);
+
+    }
+
+    return value.map(v => typeof v === 'string' ? +(<string>v).trim() : v);
+
+  };
+
+  /** Checks if all values of the array are booleans or can be converted to booleans (accepts 'true' and 'false' for conversion). Casts all values to boolean if passed. */
+  BOOLEANS: Argumental.Validator = (value, name, arg) => {
+
+    const errorMessage = `Invalid value for ${arg ? 'argument' : 'option'} ${name}!\n   Value must be multiple booleans.`;
+
+    if ( ! value || typeof value !== 'object' || value.constructor !== Array )
+      throw new Error(errorMessage);
+
+    for ( const v of value ) {
+
+      if ( (typeof v !== 'boolean' && typeof v !== 'string') || (typeof v === 'string' && ! ['true', 'false'].includes(v.toLowerCase().trim())) )
+        throw new Error(errorMessage);
+
+    }
+
+    return value.map(v => typeof v === 'string' ? ((<string>v).toLowerCase().trim() === 'true') : v);
+
+  };
+
   /** Checks if the value is a valid file path and the file exists and can be read (relative to current working directory). */
   FILE_PATH: Argumental.Validator = (value, name, arg) => {
 

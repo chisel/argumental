@@ -7,7 +7,9 @@ app
 .alias('s')
 .description('Searches for a dog breed')
 
-.argument('<query>', 'A breed name to search for')
+.argument('<...query>', 'A breed name to search for')
+// Join all values
+.sanitize(values => values.join(' '))
 // Guard against empty strings
 .validate(value => ! value.trim().length ? new Error('Invalid query!') : value)
 // NOTE: Returning an error object would work the same as throwing one

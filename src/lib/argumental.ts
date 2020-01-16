@@ -678,8 +678,30 @@ export class ArgumentalApp extends BuiltInValidators {
     if ( this._currentCommand === null && ! this._global )
       throw new Error(`ARGUMENTAL_ERROR: Cannot define argument ${syntax} because no command is being defined and global definition is disabled!`);
 
+    // Check if last argument was rest
+    if ( this._global ) {
+
+      for ( const commandName in this._commands ) {
+
+        const cmdArgs = this._commands[commandName].arguments;
+
+        if ( cmdArgs.length && cmdArgs[cmdArgs.length - 1].rest )
+          throw new Error(`ARGUMENTAL_ERROR: Cannot define argument ${syntax} after a rest argument!`);
+
+      }
+
+    }
+    else {
+
+      const cmdArgs = this._commands[this._currentCommand].arguments;
+
+      if ( cmdArgs.length && cmdArgs[cmdArgs.length - 1].rest )
+        throw new Error(`ARGUMENTAL_ERROR: Cannot define argument ${syntax} after a rest argument!`);
+
+    }
+
     // Parse argument
-    const argument: Argumental.CommandArgumentDeclaration = _.assign(this._parser.parseArgument(syntax, validators, defaultValue), {
+    const argument = _.assign(this._parser.parseArgument<Argumental.CommandArgumentDeclaration>(syntax, true, validators, defaultValue), {
       description: description || null
     });
 
@@ -849,7 +871,7 @@ export class ArgumentalApp extends BuiltInValidators {
       for ( const argument of command.arguments ) {
 
         if ( argument.required && parsed.args[argument.apiName] === null )
-          return this._log.error(`Missing required argument <${argument.name}>!`);
+          return this._log.error(`Missing required argument <${argument.rest ? '...' : ''}${argument.name}>!`);
 
       }
 
@@ -909,8 +931,23 @@ export class ArgumentalApp extends BuiltInValidators {
           // Regex validator
           if ( validator instanceof RegExp ) {
 
-            if ( typeof parsed.args[argument.apiName] !== 'string' || ! parsed.args[argument.apiName].match(validator) )
-              return this._log.error(`Invalid value for argument ${argument.name}!`);
+            // If rest argument and value is array
+            if ( argument.rest && parsed.args[argument.apiName] && typeof parsed.args[argument.apiName] === 'object' && parsed.args[argument.apiName].constructor === Array ) {
+
+              for ( const value of parsed.args[argument.apiName] ) {
+
+                if ( typeof value !== 'string' || ! value.match(validator) )
+                  return this._log.error(`Invalid value for argument ${argument.name}!`);
+
+              }
+
+            }
+            else {
+
+              if ( typeof parsed.args[argument.apiName] !== 'string' || ! (<string>parsed.args[argument.apiName]).match(validator) )
+                return this._log.error(`Invalid value for argument ${argument.name}!`);
+
+            }
 
             continue;
 
@@ -1081,13 +1118,13 @@ export class ArgumentalApp extends BuiltInValidators {
 
     }
 
-    // Skip arguments validation if immediate option was provided
+    // Skip arguments detaults if immediate option was provided
     if ( ! immediateOption ) {
 
       // Apply argument defaults
       for ( const argument of command.arguments ) {
 
-        if ( ! argument.required && parsed.args[argument.apiName] === null )
+        if ( ! argument.required && parsed.args[argument.apiName] === null && argument.default !== undefined )
           parsed.args[argument.apiName] = <any>argument.default;
 
       }

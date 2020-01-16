@@ -73,6 +73,120 @@ describe('Validators', function() {
 
   });
 
+  it('should validate array of strings', function() {
+
+    expect(validators.STRINGS(['s','tring'], 'correct value', true, 'command', null)).to.be.undefined;
+
+    let validationError: Error = null;
+
+    try {
+
+      validators.STRINGS(0, 'incorrect value', false, 'command', null);
+
+    }
+    catch (error) {
+
+      validationError = error;
+
+    }
+
+    expect(validationError).to.not.equal(null);
+    expect(validationError.message).to.equal('Invalid value for option incorrect value!\n   Value must be multiple strings.');
+
+    validationError = null;
+
+    try {
+
+      validators.STRINGS([false, 'string'], 'incorrect value', false, 'command', null);
+
+    }
+    catch (error) {
+
+      validationError = error;
+
+    }
+
+    expect(validationError).to.not.equal(null);
+    expect(validationError.message).to.equal('Invalid value for option incorrect value!\n   Value must be multiple strings.');
+
+  });
+
+  it('should validate array of numbers', function() {
+
+    expect(validators.NUMBERS(['23',1], 'correct value', true, 'command', null)).to.deep.equal([23, 1]);
+
+    let validationError: Error = null;
+
+    try {
+
+      validators.NUMBERS(13, 'incorrect value', false, 'command', null);
+
+    }
+    catch (error) {
+
+      validationError = error;
+
+    }
+
+    expect(validationError).to.not.equal(null);
+    expect(validationError.message).to.equal('Invalid value for option incorrect value!\n   Value must be multiple numbers.');
+
+    validationError = null;
+
+    try {
+
+      validators.NUMBERS([100, '$1'], 'incorrect value', false, 'command', null);
+
+    }
+    catch (error) {
+
+      validationError = error;
+
+    }
+
+    expect(validationError).to.not.equal(null);
+    expect(validationError.message).to.equal('Invalid value for option incorrect value!\n   Value must be multiple numbers.');
+
+  });
+
+  it('should validate array of booleans', function() {
+
+    expect(validators.BOOLEANS(['false','true', true], 'correct value', true, 'command', null)).to.deep.equal([false, true, true]);
+
+    let validationError: Error = null;
+
+    try {
+
+      validators.BOOLEANS(true, 'incorrect value', false, 'command', null);
+
+    }
+    catch (error) {
+
+      validationError = error;
+
+    }
+
+    expect(validationError).to.not.equal(null);
+    expect(validationError.message).to.equal('Invalid value for option incorrect value!\n   Value must be multiple booleans.');
+
+    validationError = null;
+
+    try {
+
+      validators.BOOLEANS([false, 'string'], 'incorrect value', false, 'command', null);
+
+    }
+    catch (error) {
+
+      validationError = error;
+
+    }
+
+    expect(validationError).to.not.equal(null);
+    expect(validationError.message).to.equal('Invalid value for option incorrect value!\n   Value must be multiple booleans.');
+
+  });
+
   it('should validate file paths', function() {
 
     let validationError: Error = null;

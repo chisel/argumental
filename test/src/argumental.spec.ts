@@ -19,6 +19,7 @@ describe('App', function() {
     .alias('sn')
     .argument('<script_type>', 'Script type', /^scraper$|^processor$|^validator$|^reporter$|^deployer$/i)
     .argument('<file_path>', 'Relative path to the script file', app.FILE_PATH)
+    .argument('[...stuff]')
     .option('--override-name -o <script_name>', 'Overrides the script name')
     .option('--overwrite -O', 'Overwrites any scripts with the same type and name', true)
     .option('-c --clean [force]', 'Cleans the scripts directory (if force is true, kills any script processes before cleaning)', false, app.BOOLEAN)
@@ -43,7 +44,8 @@ describe('App', function() {
         description: 'A global argument',
         required: false,
         validators: [],
-        default: undefined
+        default: undefined,
+        rest: false
       },
       {
         name: 'script_type',
@@ -51,7 +53,8 @@ describe('App', function() {
         description: 'Script type',
         required: true,
         validators: [/^scraper$|^processor$|^validator$|^reporter$|^deployer$/i],
-        default: undefined
+        default: undefined,
+        rest: false
       },
       {
         name: 'file_path',
@@ -59,7 +62,17 @@ describe('App', function() {
         description: 'Relative path to the script file',
         required: true,
         validators: [{ callback: app.FILE_PATH, destructuringParams: false }],
-        default: undefined
+        default: undefined,
+        rest: false
+      },
+      {
+        name: 'stuff',
+        apiName: 'stuff',
+        description: null,
+        required: false,
+        validators: [],
+        default: undefined,
+        rest: true
       }
     ]);
 
@@ -291,6 +304,41 @@ describe('App', function() {
     expect(defError).not.to.be.undefined;
     expect(defError.message).to.equal('ARGUMENTAL_ERROR: Cannot define alias blah because it conflicts with a command or alias of the same name!');
 
+    try {
+
+      new ArgumentalApp()
+      .argument('[arg1]')
+      .argument('<...args>')
+      .argument('<arg2>')
+
+    }
+    catch (error) {
+
+      defError = error;
+
+    }
+
+    expect(defError).not.to.be.undefined;
+    expect(defError.message).to.equal('ARGUMENTAL_ERROR: Cannot define argument <arg2> after a rest argument!');
+
+    try {
+
+      new ArgumentalApp()
+      .global
+      .argument('<...args>')
+      .command('blah')
+      .argument('[arg2]')
+
+    }
+    catch (error) {
+
+      defError = error;
+
+    }
+
+    expect(defError).not.to.be.undefined;
+    expect(defError.message).to.equal('ARGUMENTAL_ERROR: Cannot define argument [arg2] after a rest argument!');
+
   });
 
   it('should report parsing errors correctly', async function() {
@@ -303,7 +351,13 @@ describe('App', function() {
     .argument('[arg2]')
     .option('-o --option', '', true)
     .option('-a --arg-option <arg>')
-    .option('-s --save [name]', '', false, null, true);
+    .option('-s --save [name]', '', false, null, true)
+    .command('rest1')
+    .argument('<arg1>')
+    .argument('<...args>')
+    .command('rest2')
+    .argument('<arg1>')
+    .argument('[...args]');
 
     // Capture error messages
     let errors: string[] = [];
@@ -343,6 +397,15 @@ describe('App', function() {
     await app.parse(['node', './test', 'test', '1', '2', '--arg-option', '-o']);
 
     expect(errors.shift()).to.equal('Missing required value for option --arg-option!');
+    expect(errors).to.be.empty;
+
+    await app.parse(['node', './test', 'rest1', '1']);
+
+    expect(errors.shift()).to.equal('Missing required argument <...args>!');
+    expect(errors).to.be.empty;
+
+    await app.parse(['node', './test', 'rest2', '1']);
+
     expect(errors).to.be.empty;
 
     app = new ArgumentalApp();
@@ -436,7 +499,7 @@ describe('App', function() {
 
   it('should run argument validators correctly', async function() {
 
-    const app = new ArgumentalApp();
+    let app = new ArgumentalApp();
     const converted: any[] = [];
 
     // Capture error messages
@@ -510,6 +573,79 @@ describe('App', function() {
     expect(errors.shift()).to.equal('Thrown!');
     expect(errors).to.be.empty;
     expect(converted).to.be.empty;
+
+    let finalArgs: Argumental.List<any>;
+    app = new ArgumentalApp();
+
+    // Capture error messages
+    errors = [];
+
+    (<any>app)._log.error = (...messages: Array<string|Error>) => {
+
+      errors = errors.concat(messages.map(message => message instanceof Error ? message.message : message));
+
+    };
+
+    app
+    .argument('<arg1>')
+    .validate(app.NUMBER)
+    .argument('<...args>')
+    .validate(/^[^\$]/i)
+    .validate(app.NUMBERS)
+    .action(args => finalArgs = args);
+
+    await app.parse(['node', 'test', '1', '$2', '3']);
+
+    expect(errors.shift()).to.equal(`Invalid value for argument args!`);
+    expect(errors).to.be.empty;
+
+    await app.parse(['node', 'test', '1', '2', '3']);
+
+    expect(errors).to.be.empty;
+    expect(finalArgs).to.deep.equal({
+      arg1: 1,
+      args: [2, 3]
+    });
+
+    app = new ArgumentalApp();
+
+    // Capture error messages
+    errors = [];
+
+    (<any>app)._log.error = (...messages: Array<string|Error>) => {
+
+      errors = errors.concat(messages.map(message => message instanceof Error ? message.message : message));
+
+    };
+
+    app
+    .argument('<arg1>')
+    .validate(app.NUMBER)
+    .argument('[...args]')
+    .validate(/^[^\$]/i)
+    .validate(app.NUMBERS)
+    .action(args => finalArgs = args);
+
+    await app.parse(['node', 'test', '1', '$2', '3']);
+
+    expect(errors.shift()).to.equal(`Invalid value for argument args!`);
+    expect(errors).to.be.empty;
+
+    await app.parse(['node', 'test', '1', '2', '3']);
+
+    expect(errors).to.be.empty;
+    expect(finalArgs).to.deep.equal({
+      arg1: 1,
+      args: [2, 3]
+    });
+
+    await app.parse(['node', 'test', '1']);
+
+    expect(errors).to.be.empty;
+    expect(finalArgs).to.deep.equal({
+      arg1: 1,
+      args: null
+    });
 
   });
 
@@ -594,6 +730,7 @@ describe('App', function() {
     .argument('<arg1>', null, app.BOOLEAN, true)
     .argument('[arg2]', null, null, 'def2')
     .argument('[arg3]', null, null, 'def3')
+    .argument('[...args]', null, null, [13])
     .option('-l', null, false, null, false, true)
     .option('--log [level]', null, false, null, false, 'silent')
     .option('--error [code]', null, true, app.NUMBER, true, 0)
@@ -608,7 +745,8 @@ describe('App', function() {
     expect(_args).to.deep.equal({
       arg1: false,
       arg2: 'provided',
-      arg3: 'def3'
+      arg3: 'def3',
+      args: [13]
     });
 
     expect(_opts).to.deep.equal({
@@ -812,6 +950,7 @@ describe('App', function() {
           required: false,
           description: 'Script type',
           default: 'ts',
+          rest: false,
           validators: [{ callback: sanitizer, destructuringParams: false }, validator]
         },
         {
@@ -820,6 +959,7 @@ describe('App', function() {
           required: true,
           description: 'Script path',
           default: undefined,
+          rest: false,
           validators: []
         }
       ],
@@ -865,6 +1005,7 @@ describe('App', function() {
           required: false,
           description: 'Script type',
           default: 'ts',
+          rest: false,
           validators: [{ callback: sanitizer, destructuringParams: false }, validator]
         }
       ],

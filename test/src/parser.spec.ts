@@ -10,28 +10,49 @@ describe('Parser', function() {
 
   it('should parse arguments correctly', function() {
 
-    expect(parser.parseArgument('[file_path]', validators.STRING)).to.deep.equal({
+    expect(parser.parseArgument('[file_path]', true, validators.STRING)).to.deep.equal({
       name: 'file_path',
       apiName: 'filePath',
       required: false,
       validators: [{ callback: validators.STRING, destructuringParams: false }],
-      default: undefined
+      default: undefined,
+      rest: false
     });
 
-    expect(parser.parseArgument('<file-path>', validators.STRING, 'package.json')).to.deep.equal({
+    expect(parser.parseArgument('<file-path>', true, validators.STRING, 'package.json')).to.deep.equal({
       name: 'file-path',
       apiName: 'filePath',
       required: true,
       validators: [{ callback: validators.STRING, destructuringParams: false }],
-      default: 'package.json'
+      default: 'package.json',
+      rest: false
     });
 
-    expect(parser.parseArgument('<relative_file_path>', null, 100)).to.deep.equal({
+    expect(parser.parseArgument('<relative_file_path>', true, null, 100)).to.deep.equal({
       name: 'relative_file_path',
       apiName: 'relativeFilePath',
       required: true,
       validators: [],
-      default: 100
+      default: 100,
+      rest: false
+    });
+
+    expect(parser.parseArgument('<...relative_file_path>', true, null, 100)).to.deep.equal({
+      name: 'relative_file_path',
+      apiName: 'relativeFilePath',
+      required: true,
+      validators: [],
+      default: 100,
+      rest: true
+    });
+
+    expect(parser.parseArgument('[...relative_file_path]', true, null, 100)).to.deep.equal({
+      name: 'relative_file_path',
+      apiName: 'relativeFilePath',
+      required: false,
+      validators: [],
+      default: 100,
+      rest: true
     });
 
   });
@@ -43,7 +64,7 @@ describe('Parser', function() {
     try {
 
       parsingError = null;
-      parser.parseArgument('<invalid]');
+      parser.parseArgument('<invalid]', true);
 
     }
     catch (error) {
@@ -58,7 +79,7 @@ describe('Parser', function() {
     try {
 
       parsingError = null;
-      parser.parseArgument('invalid');
+      parser.parseArgument('invalid', true);
 
     }
     catch (error) {
@@ -73,7 +94,7 @@ describe('Parser', function() {
     try {
 
       parsingError = null;
-      parser.parseArgument('<invalid__argument>');
+      parser.parseArgument('<invalid__argument>', true);
 
     }
     catch (error) {
@@ -88,7 +109,7 @@ describe('Parser', function() {
     try {
 
       parsingError = null;
-      parser.parseArgument('<--invalid-argument>');
+      parser.parseArgument('<--invalid-argument>', true);
 
     }
     catch (error) {
@@ -103,7 +124,7 @@ describe('Parser', function() {
     try {
 
       parsingError = null;
-      parser.parseArgument('[invalid__]');
+      parser.parseArgument('[invalid__]', true);
 
     }
     catch (error) {
@@ -439,6 +460,36 @@ describe('Parser', function() {
     expect(parsingError).not.to.be.null;
     expect(parsingError.message).to.equal(`ARGUMENTAL_ERROR: Option ---port has invalid syntax or contains invalid characters!`);
 
+    try {
+
+      parsingError = null;
+      parser.parseOption('--port [...nums]');
+
+    }
+    catch (error) {
+
+      parsingError = error;
+
+    }
+
+    expect(parsingError).not.to.be.null;
+    expect(parsingError.message).to.equal(`ARGUMENTAL_ERROR: Option --port [...nums] has invalid syntax or contains invalid characters!`);
+
+    try {
+
+      parsingError = null;
+      parser.parseOption('--port <...nums>');
+
+    }
+    catch (error) {
+
+      parsingError = error;
+
+    }
+
+    expect(parsingError).not.to.be.null;
+    expect(parsingError.message).to.equal(`ARGUMENTAL_ERROR: Option --port <...nums> has invalid syntax or contains invalid characters!`);
+
   });
 
   it('should parse cli arguments correctly', function() {
@@ -455,7 +506,8 @@ describe('Parser', function() {
             required: true,
             description: null,
             validators: [],
-            default: undefined
+            default: undefined,
+            rest: false
           },
           {
             name: 'script_name',
@@ -463,7 +515,8 @@ describe('Parser', function() {
             required: true,
             description: null,
             validators: [],
-            default: undefined
+            default: undefined,
+            rest: false
           }
         ],
         options: [
@@ -666,7 +719,8 @@ describe('Parser', function() {
             required: true,
             description: null,
             validators: [],
-            default: undefined
+            default: undefined,
+            rest: false
           },
           {
             name: 'script_name',
@@ -674,7 +728,8 @@ describe('Parser', function() {
             required: true,
             description: null,
             validators: [],
-            default: undefined
+            default: undefined,
+            rest: false
           }
         ],
         options: [
