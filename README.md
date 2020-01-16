@@ -1,9 +1,10 @@
-<img src="./images/display-image.png" style="max-width: calc(100% + 112px) !important; margin: 0 -56px !important;">
+![Argumental](./images/display.png)
 
 # Index
 
   1. [About](#about)
   2. [Installation](#installation)
+
   3. [Quick Start](#quick-start)
   4. [API](#api)
       - [command()](#commandname-description)
