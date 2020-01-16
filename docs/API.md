@@ -152,7 +152,7 @@ Configures Argumental with the given options. Options object can have any of the
   - **colors**: Boolean indicating if logs should be colorful (defaults to `true`).
   - **topLevelPlainHelp**: When true, application help will be displayed when the top-level command is invoked without any arguments or options (defaults to `true`).
   - **help**: A help renderer function to invoke when help must be rendered and logged to console. The function takes the following parameters:
-    - **definitions**: A key-value pair object containing all [command declarations](../../../blob/master/src/types.ts#L91) where key `''` refers to the top-level command.
+    - **definitions**: A key-value pair object containing all [command declarations](../src/types.ts#L91) where key `''` refers to the top-level command.
     - **cmd**: The invoked command name.
 
 ## Built-in Validators
