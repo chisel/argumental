@@ -405,7 +405,7 @@ const app = new ArgumentalApp();
 
 # Examples
 
-Several examples with different project setup and API usage are included in the [examples directory](https://github.com/chisel/argumental/tree/master/examples). These examples demonstrate Argumental's full potential in creating flexible and modular CLI apps while writing less code.
+Several examples with different project setup and API usage are included in the [examples directory](./examples). These examples demonstrate Argumental's full potential in creating flexible and modular CLI apps while writing less code.
 
 # Tests
 
