@@ -1,3 +1,5 @@
+![Argumental](./images/display-image.png)
+
 # Index
 
   1. [About](#about)
