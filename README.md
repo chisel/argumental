@@ -18,16 +18,17 @@ With Argumental, you can:
   4. [Chaining And Context](#chaining-and-context)
   5. [Validation](#validation)
   6. [Rest Arguments](#rest-arguments)
-  7. [Events](#events)
-    - [Default Events](#default-events)
-    - [Custom Events](#custom-events)
-  8. [Destructuring Parameters](#destructuring-parameters)
-  9. [Modular Design](#modular-design)
-  10. [Extras](#extras)
-  11. [Examples](#examples)
-  12. [Tests](#tests)
-  13. [Developer Documentation](#developer-documentation)
-  14. [Building The Source](#building-the-source)
+  7. [Immediate Options](#immediate-options)
+  8. [Events](#events)
+      - [Default Events](#default-events)
+      - [Custom Events](#custom-events)
+  9. [Destructuring Parameters](#destructuring-parameters)
+  10. [Modular Design](#modular-design)
+  11. [Extras](#extras)
+  12. [Examples](#examples)
+  13. [Tests](#tests)
+  14. [Developer Documentation](#developer-documentation)
+  15. [Building The Source](#building-the-source)
 
 # Installation
 
@@ -221,6 +222,14 @@ Things to keep in mind about rest arguments:
   - Default value will be set instead of the whole array and not each value in the array.
   - Options do not support rest arguments. If multiple values is expected for an option, use the [`multi` API](#multivalue) instead.
   - When using the built-in validators, use the plural version for rest arguments (e.g. `app.STRINGS` instead of `app.STRING`).
+
+# Immediate Options
+
+Options can be defined with an immediate flag. This flag means when the option is provided and parsed, all syntax validation (except for unknown commands), all option and argument validators, and applying default values will be skipped and actions will be executed as soon as possible. This behavior is desired with options such as `--help` and `--version`.
+
+In this case, the data passed into action handlers will contain nothing but the immediate option's value.
+
+> **NOTE:** If an immediate option has the multi flag, only the first occurrence's value will be considered, meaning the value provided to the action handlers will never be an array.
 
 # Events
 
