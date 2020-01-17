@@ -1,4 +1,4 @@
-# Dog CLI
+# Dogs CLI
 
 Commands:
   - **dogs list --page &lt;page_number&gt; --limit &lt;limit_count&gt; --imperial**  
@@ -25,4 +25,4 @@ npm link
   - Display information for pugs:  
   `dogs search pug`
   - Display an image of a golden retriever:  
-  `dogs image "golden retriever"`
+  `dogs image golden retriever`
