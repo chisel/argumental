@@ -133,6 +133,47 @@ export class Logger {
 
   }
 
+  /**
+  * Determines whether requirements differ between components (option declarations, argument declarations, etc.).
+  * @param components An array of components.
+  */
+  private _doesRequirementsDiffer(components: Array<Argumental.OptionDeclaration|Argumental.ArgumentDeclaration>): boolean {
+
+    let lastRequirement: boolean = undefined;
+
+    for ( const component of components ) {
+
+      if ( lastRequirement === undefined ) {
+
+        lastRequirement = component.required;
+        continue;
+
+      }
+
+      if ( component.required !== lastRequirement ) return true;
+
+    }
+
+    return false;
+
+  }
+
+  /**
+  * Determines if there are any required declarations in a set of components (option declarations, argument declarations, etc.).
+  * @param components An array of components.
+  */
+  private _anyRequired(components: Array<Argumental.OptionDeclaration|Argumental.ArgumentDeclaration>): boolean {
+
+    for ( const component of components ) {
+
+      if ( component.required ) return true;
+
+    }
+
+    return false;
+
+  }
+
   /** Application name setter. */
   public set appName(name: string) {
 
@@ -276,13 +317,14 @@ export class Logger {
       argumentsSection = color.white.bold('ARGUMENTS:\n\n');
 
       const longest = this._getLongest(definitions[cmd].arguments.map(arg => arg.name));
+      const requirementsDiffer = this._doesRequirementsDiffer(definitions[cmd].arguments);
 
       for ( const argument of definitions[cmd].arguments ) {
 
         // Argument name
         argumentsSection += `${this._pad(2)}${color.magenta((argument.rest ? '...' : '') + argument.name.padEnd(longest))}`;
         // Argument requirement
-        argumentsSection += `${this._pad()}${argument.required ? color.bold('required') : color.italic.dim('optional')}`;
+        if ( requirementsDiffer ) argumentsSection += `${this._pad()}${argument.required ? color.bold('required') : color.italic.dim('optional')}`;
         // Argument description
         if ( argument.description ) argumentsSection += `${this._pad()}${argument.description}`;
 
@@ -297,6 +339,7 @@ export class Logger {
 
     const longest = this._getLongest(definitions[cmd].options.map(opt => this._getOptionSyntax(opt).full));
     const anyMulti = this._hasMultiOption(definitions[cmd]);
+    const anyRequired = this._anyRequired(definitions[cmd].options);
 
     for ( const option of definitions[cmd].options ) {
 
@@ -308,7 +351,7 @@ export class Logger {
       optionsSection = optionsSection.substr(0, optionsSection.length - 1);
 
       // Option requirement
-      optionsSection += `${this._pad()}${option.required ? color.bold('required') : color.italic.dim('optional')}`;
+      if ( anyRequired ) optionsSection += `${this._pad()}${option.required ? color.bold('required') : color.italic.dim('optional')}`;
       // Option repeatable (multi)
       if ( anyMulti ) optionsSection += `${this._pad()}${option.multi ? color.greenBright('repeatable') : '          '}`;
       // Option description
