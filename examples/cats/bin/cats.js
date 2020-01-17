@@ -52,7 +52,12 @@ app
   for ( const breed of breeds ) {
 
     if ( breed.name ) console.log(chalk.blueBright('Name:'.padEnd(13)), chalk.bold(breed.name));
-    // TODO: Log more info
+    if ( breed.life_span ) console.log(chalk.blueBright('Life Span:'.padEnd(13)), breed.life_span);
+    if ( breed.temperament ) console.log(chalk.blueBright('Temperament:'.padEnd(13)), breed.temperament.split(',').map(w => w.trim().substr(0, 1).toUpperCase() + w.trim().substr(1).toLowerCase()).join(', '));
+    if ( breed.hairless !== undefined ) console.log(chalk.blueBright('Hairless:'.padEnd(13)), ['No', 'Yes'][breed.hairless]);
+    if ( breed.weight ) console.log(chalk.blueBright('Weight:'.padEnd(13)), breed.weight[opts.i ? 'imperial' : 'metric']);
+    if ( breed.hypoallergenic !== undefined ) console.log(chalk.blueBright('Hypoallergenic:'.padEnd(13)), ['No', 'Yes'][breed.hypoallergenic]);
+    if ( breed.origin ) console.log(chalk.blueBright('Origin:'.padEnd(13)), breed.origin);
 
     console.log('');
 
@@ -97,13 +102,18 @@ app
   for ( const breed of breeds ) {
 
     if ( breed.name ) console.log(chalk.blueBright('Name:'.padEnd(13)), chalk.bold(breed.name));
-    // TODO: Log more info
+    if ( breed.life_span ) console.log(chalk.blueBright('Life Span:'.padEnd(13)), breed.life_span);
+    if ( breed.temperament ) console.log(chalk.blueBright('Temperament:'.padEnd(13)), breed.temperament.split(',').map(w => w.trim().substr(0, 1).toUpperCase() + w.trim().substr(1).toLowerCase()).join(', '));
+    if ( breed.hairless !== undefined ) console.log(chalk.blueBright('Hairless:'.padEnd(13)), ['No', 'Yes'][breed.hairless]);
+    if ( breed.weight ) console.log(chalk.blueBright('Weight:'.padEnd(13)), breed.weight[opts.i ? 'imperial' : 'metric']);
+    if ( breed.hypoallergenic !== undefined ) console.log(chalk.blueBright('Hypoallergenic:'.padEnd(13)), ['No', 'Yes'][breed.hypoallergenic]);
+    if ( breed.origin ) console.log(chalk.blueBright('Origin:'.padEnd(13)), breed.origin);
 
     console.log('');
 
   }
 
-  console.log(chalk.cyan.bold(`Found ${breeds.length} result${breeds.length !== 1 ? 's' : ''}\n`));
+  console.log(chalk.yellow.bold(`Found ${breeds.length} result${breeds.length !== 1 ? 's' : ''}\n`));
 
 })
 
@@ -122,7 +132,7 @@ app
 
   // Search for breed
   const breeds = await request.get({
-    url: dHOST + '/breeds/search',
+    url: HOST + '/breeds/search',
     qs: {
       q: args.query
     },
