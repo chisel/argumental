@@ -18,13 +18,16 @@ With Argumental, you can:
   4. [Chaining And Context](#chaining-and-context)
   5. [Validation](#validation)
   6. [Rest Arguments](#rest-arguments)
-  7. [Destructuring Parameters](#destructuring-parameters)
-  8. [Modular Design](#modular-design)
-  9. [Extras](#extras)
-  10. [Examples](#examples)
-  11. [Tests](#tests)
-  12. [Developer Documentation](#developer-documentation)
-  13. [Building The Source](#building-the-source)
+  7. [Events](#events)
+    - [Default Events](#default-events)
+    - [Custom Events](#custom-events)
+  8. [Destructuring Parameters](#destructuring-parameters)
+  9. [Modular Design](#modular-design)
+  10. [Extras](#extras)
+  11. [Examples](#examples)
+  12. [Tests](#tests)
+  13. [Developer Documentation](#developer-documentation)
+  14. [Building The Source](#building-the-source)
 
 # Installation
 
@@ -218,6 +221,71 @@ Things to keep in mind about rest arguments:
   - Default value will be set instead of the whole array and not each value in the array.
   - Options do not support rest arguments. If multiple values is expected for an option, use the [`multi` API](#multivalue) instead.
   - When using the built-in validators, use the plural version for rest arguments (e.g. `app.STRINGS` instead of `app.STRING`).
+
+# Events
+
+Argumental emits several events throughout the execution of the app. Using the [`on()` method](./docs/API.md#onevent-handler), event handlers can be registered to run code at different stages of the execution flow.
+
+## Default Events
+
+Argumental apps run in the following stages:
+  1. App is defined (running all calls to the API)
+  2. CLI arguments are parsed
+  3. Parsed arguments are validated based on the definitions
+  4. Event `before` is emitted
+  5. Validators/sanitizers are run
+  6. Default values are applied
+  7. Event `before-actions` is emitted
+  8. Action handlers are run
+  9. Event `after` is emitted
+
+All default events provide a data object containing the parsed arguments at that stage. The data state for each event is as the following:
+  - `before`: Data is in its raw form before any validation/sanitization and with no defaults applied. All provided argument and option values are strings (except for boolean options), missing arguments are null, rest arguments are an array of values, missing options are undefined, options provided without an argument value are null.
+  - `before-actions`: Data is at its final form with validation/sanitization done and defaults applied.
+  - `after`: Data is the same as in `before-actions` (since actions cannot mutate the parsed data).
+
+The following properties exist on all data objects provided with default events:
+  - **args**: A key-value pair object containing the passed-in arguments (uses camel-cased argument names as keys).
+  - **opts**: A key-value pair object containing the passed-in options (uses the shorthand and camel-cased option names as keys).
+  - **cmd**: The name of the invoked command.
+
+> **NOTE:** The data state is different when an [immediate option](#immediate-options) is parsed.
+
+Registering event handlers for default events is [context-based](#context-and-chaining), meaning each call to the `on()` method registers the handler in the current context (command-specific, globally, or top-level).
+
+> **NOTE:** When the top-level command has no definitions (no arguments, options, or actions) and the [`topLevelPlainHelp` option](./docs/API.md#configoptions) is true (default state), no default events would be emitted when the top command is executed.
+
+## Custom Events
+
+Custom events can be emitted using the [`emit()` method](./docs/API.md#emitevent-data) with a custom data object and event handlers can be registered through the [`on()` method](./docs/API.md#onevent-handler) regardless of the context.
+
+Example:
+```js
+const fs = require('fs').promises;
+
+app
+.command('remove')
+.argument('<dir>')
+.actionDestruct(async ({ args, suspend }) => {
+
+  // If directory is empty, exit early
+  if ( ! (await fs.readdir(args.dir)).length ) {
+
+    app.emit('empty-dir', { dir: args.dir });
+    return suspend();
+
+  }
+
+  // Remove the directory
+  await fs.rmdir(args.dir);
+
+})
+.on('empty-dir', data => {
+
+  // Report the empty dir
+
+});
+```
 
 # Destructuring Parameters
 

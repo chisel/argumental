@@ -642,7 +642,8 @@ describe('Parser', function() {
           }
         ],
         actions: [],
-        order: 1
+        order: 1,
+        events: { before: [], 'before-actions': [], after: [] }
       }
     };
 
@@ -709,7 +710,8 @@ describe('Parser', function() {
         arguments: [],
         actions: [],
         original: true,
-        order: 0
+        order: 0,
+        events: { before: [], 'before-actions': [], after: [] }
       },
       'new script': {
         name: 'new script',
@@ -748,7 +750,8 @@ describe('Parser', function() {
           }
         ],
         actions: [],
-        order: 1
+        order: 1,
+        events: { before: [], 'before-actions': [], after: [] }
       }
     };
 

@@ -43,7 +43,12 @@ export class ArgumentalApp extends BuiltInValidators {
   private _globalDeclaration: Argumental.GlobalDeclaration = {
     arguments: [],
     options: [],
-    actions: []
+    actions: [],
+    events: {
+      before: [],
+      'before-actions': [],
+      after: []
+    }
   };
   /** Command declarations. */
   private _commands: Argumental.List<Argumental.CommandDeclaration> = {
@@ -56,7 +61,12 @@ export class ArgumentalApp extends BuiltInValidators {
       options: [],
       actions: [],
       original: true,
-      order: 0
+      order: 0,
+      events: {
+        before: [],
+        'before-actions': [],
+        after: []
+      }
     }
   };
   /** Current command declaration. */
@@ -77,6 +87,8 @@ export class ArgumentalApp extends BuiltInValidators {
   private _topLevelPlainHelp: boolean = true;
   /** The last command order set. */
   private _lastCommandOrder: number = 0;
+  /** Custom event declarations. */
+  private _events: Map<string, Argumental.EventHandler[]> = new Map();
 
   /**
   * Attaches an array of validators to the given component (argument or option's argument).
@@ -214,20 +226,36 @@ export class ArgumentalApp extends BuiltInValidators {
   }
 
   /**
+  * Emits a context-based default event for a command.
+  * @param event The default event name.
+  * @param cmd The command name.
+  * @param data The event data.
+  */
+  private async _emitDefault(event: 'before'|'before-actions'|'after', cmd: string, data: Argumental.EventData<any>): Promise<void> {
+
+    // Check command name
+    if ( ! this._commands.hasOwnProperty(cmd) )
+      throw new Error(`INTERNAL_ERROR: Command ${cmd} not defined!`);
+
+    // Emit all event handlers
+    for ( const handler of this._commands[cmd].events[event] ) {
+
+      await handler(data);
+
+    }
+
+  }
+
+  /**
   * Configures Argumental with the provided options.
   * @param options The configuration options.
   */
   public config(options: Argumental.Options): ArgumentalApp {
 
-    // Set defaults
-    if ( ! options.hasOwnProperty('colors') ) options.colors = true;
-    if ( ! options.hasOwnProperty('topLevelPlainHelp') ) options.topLevelPlainHelp = true;
-    if ( ! options.hasOwnProperty('help') ) options.help = null;
-
     // Apply config
-    this._log.colors = options.colors;
-    this._topLevelPlainHelp = options.topLevelPlainHelp;
-    this._log.customHelpRenderer = options.help;
+    if ( options.hasOwnProperty('colors') ) this._log.colors = options.colors;
+    if ( options.hasOwnProperty('topLevelPlainHelp') ) this._topLevelPlainHelp = options.topLevelPlainHelp;
+    if ( options.hasOwnProperty('help') ) this._log.customHelpRenderer = options.help;
 
     return this;
 
@@ -626,7 +654,8 @@ export class ArgumentalApp extends BuiltInValidators {
       arguments: _.cloneDeep(this._globalDeclaration.arguments),
       options: _.cloneDeep(this._globalDeclaration.options),
       actions: _.cloneDeep(this._globalDeclaration.actions),
-      order: ++this._lastCommandOrder
+      order: ++this._lastCommandOrder,
+      events: _.cloneDeep(this._globalDeclaration.events)
     };
 
     // Register in conflicting names
@@ -821,6 +850,101 @@ export class ArgumentalApp extends BuiltInValidators {
   }
 
   /**
+  * Registers an event handler.
+  * @param event The event name (case insensitive).
+  * @param handler The event handler to register.
+  */
+  public on(event: 'before', handler: Argumental.EventHandler<Argumental.EventData<string>>): ArgumentalApp;
+  public on(event: 'before-actions'|'after', handler: Argumental.EventHandler<Argumental.EventData<any>>): ArgumentalApp;
+  public on(event: string, handler: Argumental.EventHandler): ArgumentalApp;
+  public on(event: string, handler: Argumental.EventHandler): ArgumentalApp {
+
+    // If event name is invalid
+    if ( ! event || typeof event !== 'string' || ! event.trim() )
+      throw new Error('ARGUMENTAL_ERROR: Invalid event name!');
+
+    event = event.trim().toLowerCase();
+
+    // If default event (context-based)
+    if ( ['before', 'before-actions', 'after'].includes(event) ) {
+
+      // If global context
+      if ( this._global ) {
+
+        // Add to global declaration
+        if ( ! this._globalDeclaration.events[event] ) this._globalDeclaration.events[event] = [];
+
+        this._globalDeclaration.events[event].push(handler);
+
+        // Append to all commands
+        for ( const commandName in this._commands ) {
+
+          // Skip top-level
+          if ( commandName === '' ) continue;
+
+          if ( ! this._commands[commandName].events[event] ) this._commands[commandName].events[event] = [];
+
+          this._commands[commandName].events[event].push(handler);
+
+        }
+
+      }
+      // Command-specific (including top-level)
+      else {
+
+        if ( ! this._commands[this._currentCommand].events[event] ) this._commands[this._currentCommand].events[event] = [];
+
+        this._commands[this._currentCommand].events[event].push(handler);
+
+      }
+
+    }
+    // Custom event (context-free)
+    else {
+
+      if ( ! this._events.has(event) ) this._events.set(event, []);
+
+      this._events.get(event).push(handler);
+
+    }
+
+    return this;
+
+  }
+
+  /**
+  * Emits a custom event within the current context.
+  * @param event The event name (case insensitive).
+  * @param data The custom event data.
+  */
+  public async emit(event: string, data?: any): Promise<void> {
+
+    // If event name is invalid
+    if ( ! event || typeof event !== 'string' || ! event.trim() )
+      throw new Error('ARGUMENTAL_ERROR: Invalid event name!');
+
+    event = event.trim().toLowerCase();
+
+    // If event name is illegal
+    if ( ['before', 'before-actions', 'after'].includes(event) )
+      throw new Error('ARGUMENTAL_ERROR: Cannot emit default events!');
+
+    // If event not found
+    if ( ! this._events.has(event) )
+      throw new Error(`ARGUMENTAL_ERROR: Event ${event} not found!`);
+
+    // Emit custom event
+    const handlers = this._events.get(event);
+
+    for ( const handler of handlers ) {
+
+      await handler(data);
+
+    }
+
+  }
+
+  /**
   * Parses the process arguments (argv) and runs the app.
   * @param argv Process arguments to parse.
   */
@@ -938,6 +1062,9 @@ export class ArgumentalApp extends BuiltInValidators {
 
     }
 
+    // Emit 'before' event
+    await this._emitDefault('before', parsed.cmd, _.cloneDeep(parsed));
+
     // Skip arguments validators if immediate option was provided
     if ( ! immediateOption ) {
 
@@ -985,7 +1112,7 @@ export class ArgumentalApp extends BuiltInValidators {
             if ( validator.destructuringParams ) {
 
               newValue = await (<Argumental.CallbackFunction<Argumental.ValidatorWithDestructuringParams>>validator).callback({
-                value: parsed.args[argument.apiName],
+                value: _.cloneDeep(parsed.args[argument.apiName]),
                 name: argument.name,
                 arg: true,
                 cmd: parsed.cmd,
@@ -997,7 +1124,7 @@ export class ArgumentalApp extends BuiltInValidators {
             else {
 
               newValue = await (<Argumental.CallbackFunction<Argumental.Validator>>validator).callback(
-                parsed.args[argument.apiName],
+                _.cloneDeep(parsed.args[argument.apiName]),
                 argument.name,
                 true,
                 parsed.cmd,
@@ -1084,7 +1211,7 @@ export class ArgumentalApp extends BuiltInValidators {
             if ( validator.destructuringParams ) {
 
               newValue = await (<Argumental.ValidatorWithDestructuringParams>validator.callback)({
-                value: value,
+                value: _.cloneDeep(value),
                 name: option.longName || option.shortName,
                 arg: false,
                 cmd: parsed.cmd,
@@ -1096,7 +1223,7 @@ export class ArgumentalApp extends BuiltInValidators {
             else {
 
               newValue = await (<Argumental.Validator>validator.callback)(
-                value,
+                _.cloneDeep(value),
                 option.longName || option.shortName,
                 false,
                 parsed.cmd,
@@ -1189,9 +1316,12 @@ export class ArgumentalApp extends BuiltInValidators {
 
     }
 
-    const actionHandlerData: any = {};
+    // Emit 'before-actions' event
+    await this._emitDefault('before-actions', parsed.cmd, _.cloneDeep(parsed));
 
     // Run action handlers
+    const actionHandlerData: any = {};
+
     for ( const action of command.actions ) {
 
       let suspended = false;
@@ -1202,8 +1332,8 @@ export class ArgumentalApp extends BuiltInValidators {
         if ( action.destructuringParams ) {
 
           await (<Argumental.ActionHandlerWithDestructuringParams>action.callback)({
-            args: parsed.args,
-            opts: parsed.opts,
+            args: _.cloneDeep(parsed.args),
+            opts: _.cloneDeep(parsed.opts),
             cmd: parsed.cmd,
             suspend: () => { suspended = true },
             data: actionHandlerData
@@ -1214,8 +1344,8 @@ export class ArgumentalApp extends BuiltInValidators {
         else {
 
           await (<Argumental.ActionHandler>action.callback)(
-            parsed.args,
-            parsed.opts,
+            _.cloneDeep(parsed.args),
+            _.cloneDeep(parsed.opts),
             parsed.cmd,
             () => { suspended = true },
             actionHandlerData
@@ -1233,6 +1363,9 @@ export class ArgumentalApp extends BuiltInValidators {
       if ( suspended ) break;
 
     }
+
+    // Emit 'after' event
+    await this._emitDefault('after', parsed.cmd, _.cloneDeep(parsed));
 
   }
 

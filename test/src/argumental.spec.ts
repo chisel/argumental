@@ -916,7 +916,8 @@ describe('App', function() {
       arguments: [],
       actions: [(<any>app)._commands[''].actions[0], { callback: actionHandler, destructuringParams: false }],
       original: false,
-      order: 0
+      order: 0,
+      events: { before: [], 'before-actions': [], after: [] }
     });
 
     expect(commands.test).to.deep.equal({
@@ -966,7 +967,8 @@ describe('App', function() {
         }
       ],
       actions: [(<any>app)._commands['test'].actions[0], { callback: actionHandler, destructuringParams: true }],
-      order: 1
+      order: 1,
+      events: { before: [], 'before-actions': [], after: [] }
     });
 
     expect(commands.test2).to.deep.equal({
@@ -1013,7 +1015,8 @@ describe('App', function() {
         }
       ],
       actions: [(<any>app)._commands['test2'].actions[0], { callback: actionHandler, destructuringParams: false }],
-      order: 2
+      order: 2,
+      events: { before: [], 'before-actions': [], after: [] }
     });
 
   });
@@ -1066,7 +1069,8 @@ describe('App', function() {
         ],
         actions: [(<any>app)._commands[''].actions[0]],
         original: false,
-        order: 0
+        order: 0,
+        events: { before: [], 'before-actions': [], after: [] }
       }
     });
 
@@ -1113,6 +1117,126 @@ describe('App', function() {
       args: {},
       opts: { i: true, im: true }
     });
+
+  });
+
+  it('should register event handlers for default events and execute them correctly', async function() {
+
+    let app = new ArgumentalApp();
+    let eventsFlow: string[] = [];
+    let expectedBeforeData: any = {}, expectedBeforeActionsData: any = {}, expectedAfterData: any = {};
+    const beforeHandler = (data: any) => {
+
+      expect(data).to.deep.equal(expectedBeforeData);
+      expect(typeof this.skip).to.equal('function');
+      eventsFlow.push('before');
+
+    };
+    const beforeActionsHandler = (data: any) => {
+
+      expect(data).to.deep.equal(expectedBeforeActionsData);
+      expect(typeof this.skip).to.equal('function');
+      eventsFlow.push('before-actions');
+
+    };
+    const afterHandler1 = (data: any) => {
+
+      expect(data).to.deep.equal(expectedAfterData);
+      expect(typeof this.skip).to.equal('function');
+      eventsFlow.push('after1');
+
+    };
+    const afterHandler2 = (data: any) => {
+
+      expect(data).to.deep.equal(expectedAfterData);
+      expect(typeof this.skip).to.equal('function');
+      eventsFlow.push('after2');
+
+    };
+
+    // Suppress errors
+    (<any>app)._log.error = () => {};
+
+    app
+    // Suppress help
+    .config({ help: () => {} })
+
+    .command('cmd1')
+    .on('before', beforeHandler)
+    .on('before-actions', beforeActionsHandler)
+    .on('after', afterHandler1)
+    .argument('<arg1>')
+    .validate(app.NUMBER)
+    .argument('[arg2]')
+    .validate(app.BOOLEAN)
+    .default(true)
+    .option('-p <number>')
+    .validate(app.NUMBER)
+    .default(5000)
+
+    .command('cmd2')
+    .option('--break')
+    .multi()
+    .immediate()
+    .argument('<arg1>')
+    .validate(app.NUMBER)
+    .on('before', beforeHandler)
+    .on('after', afterHandler1)
+
+    .global
+    .on('after', afterHandler2)
+
+    .top
+    .on('after', afterHandler1);
+
+    await app.parse(['node', 'test', 'cmd1']);
+    expect(eventsFlow).to.deep.equal([]);
+
+    expectedBeforeData = { cmd: 'cmd1', args: { arg1: 'str', arg2: null }, opts: { p: undefined, help: false } };
+    await app.parse(['node', 'test', 'cmd1', 'str']);
+    expect(eventsFlow).to.deep.equal(['before']);
+    eventsFlow = [];
+
+    expectedBeforeData = { cmd: 'cmd1', args: { arg1: '2', arg2: null }, opts: { p: undefined, help: false } };
+    expectedBeforeActionsData = { cmd: 'cmd1', args: { arg1: 2, arg2: true }, opts: { p: 5000, help: false } };
+    expectedAfterData = { cmd: 'cmd1', args: { arg1: 2, arg2: true }, opts: { p: 5000, help: false } };
+    await app.parse(['node', 'test', 'cmd1', '2']);
+    expect(eventsFlow).to.deep.equal(['before', 'before-actions', 'after1', 'after2']);
+    eventsFlow = [];
+
+    expectedBeforeData = { cmd: 'cmd1', args: { arg1: '100', arg2: 'false' }, opts: { p: null, help: false } };
+    await app.parse(['node', 'test', 'cmd1', '100', 'false', '-p']);
+    expect(eventsFlow).to.deep.equal([]);
+    eventsFlow = [];
+
+    expectedBeforeData = { cmd: 'cmd1', args: { arg1: '100', arg2: 'false' }, opts: { p: '3001', help: false } };
+    expectedBeforeActionsData = { cmd: 'cmd1', args: { arg1: 100, arg2: false }, opts: { p: 3001, help: false } };
+    expectedAfterData = { cmd: 'cmd1', args: { arg1: 100, arg2: false }, opts: { p: 3001, help: false } };
+    await app.parse(['node', 'test', 'cmd1', '100', 'false', '-p', '3001']);
+    expect(eventsFlow).to.deep.equal(['before', 'before-actions', 'after1', 'after2']);
+    eventsFlow = [];
+
+    expectedBeforeData = { cmd: 'cmd2', args: { arg1: '200' }, opts: { break: false, help: false } };
+    expectedAfterData = { cmd: 'cmd2', args: { arg1: 200 }, opts: { break: false, help: false } };
+    await app.parse(['node', 'test', 'cmd2', '200']);
+    expect(eventsFlow).to.deep.equal(['before', 'after1', 'after2']);
+    eventsFlow = [];
+
+    expectedBeforeData = { cmd: 'cmd2', args: {}, opts: { break: true } };
+    expectedAfterData = { cmd: 'cmd2', args: {}, opts: { break: true } };
+    await app.parse(['node', 'test', 'cmd2', '200', '--break', '--break']);
+    expect(eventsFlow).to.deep.equal(['before', 'after1', 'after2']);
+    eventsFlow = [];
+
+    await app.parse(['node', 'test']);
+    expect(eventsFlow).to.deep.equal([]);
+    eventsFlow = [];
+
+    app.config({ topLevelPlainHelp: false })
+    expectedAfterData = { cmd: '', args: {}, opts: { help: false } };
+    await app.parse(['node', 'test']);
+    expect(eventsFlow).to.deep.equal(['after1']);
+    eventsFlow = [];
 
   });
 

@@ -85,6 +85,8 @@ export namespace Argumental {
     options: OptionDeclaration[];
     /** Global action handlers. */
     actions: CallbackFunction<ActionHandler|ActionHandlerWithDestructuringParams>[];
+    /** Global event declarations. */
+    events: EventDeclarations;
 
   }
 
@@ -106,6 +108,36 @@ export namespace Argumental {
     original?: boolean;
     /** Order number to sort commands with. */
     order: number;
+    /** Event declarations for this command. */
+    events: EventDeclarations;
+
+  }
+
+  /**
+  * Event handler.
+  * @param data Event data.
+  */
+  export type EventHandler<T=any> = (data: T) => any|Promise<any>;
+
+  export interface EventDeclarations {
+
+    /** Runs before validators and action handlers. */
+    before: EventHandler[];
+    /** Runs before action handlers. */
+    'before-actions': EventHandler[];
+    /** Runs after action handlers. */
+    after: EventHandler[];
+
+  }
+
+  export interface EventData<T> {
+
+    /** Parsed arguments for the command at the current stage. */
+    args: List<T>;
+    /** Parsed options for the command at the current stage. */
+    opts: List<T|boolean>;
+    /** The name of the invoked command. */
+    cmd: string;
 
   }
 

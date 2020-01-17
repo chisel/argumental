@@ -26,6 +26,8 @@ Once imported, the following methods are available on the app object and all met
   - [global](#global)
   - [top](#top)
   - [config()](#configoptions)
+  - [on()](#onevent-handler)
+  - [emit()](#emitevent-data)
   - [STRING](#string)
   - [NUMBER](#number)
   - [BOOLEAN](#boolean)
@@ -150,10 +152,26 @@ Turns [top-level declaration](../../../#chaining-and-context) on within the chai
 
 Configures Argumental with the given options. Options object can have any of the following properties:
   - **colors**: Boolean indicating if logs should be colorful (defaults to `true`).
-  - **topLevelPlainHelp**: When true, application help will be displayed when the top-level command is invoked without any arguments or options (defaults to `true`).
+  - **topLevelPlainHelp**: When true, application help will be displayed when the top-level command is invoked without any arguments, options, or actions (defaults to `true`).  
+  No [default events](../../../#default-events) would be emitted in this case.
   - **help**: A help renderer function to invoke when help must be rendered and logged to console. The function takes the following parameters:
     - **definitions**: A key-value pair object containing all [command declarations](../src/types.ts#L91) where key `''` refers to the top-level command.
     - **cmd**: The invoked command name.
+
+### on(___event___, ___handler___)
+
+Registers an [event handler](../../../#events).
+  - **event**: A [default](../../../#default-events) or [custom](../../../#custom-events) event name.
+  - **handler**: An event handler to register which takes the following parameter:
+    - **data**: The provided event data (if any).
+
+Event handlers can return a promise for async execution.
+
+### emit(___event___, ___data___)
+
+Emits a [custom event](../../../#custom-events).
+  - **event**: The custom event name.
+  - **data**: The event data to provide to all handlers.
 
 ## Built-in Validators
 
