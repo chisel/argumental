@@ -108,7 +108,7 @@ app
 
 > **NOTE:** Top-level declaration can also be enabled anywhere in the chain by using the [`top` API](./docs/API.md#top).
 
-Arguments, options, and actions can also be defined on the shared context and applied to all commands (excluding top-level) using the [`shared` API](./docs/API.md#shared).
+Arguments, options, default event listeners, and actions can also be defined on the shared context and applied to all commands (excluding top-level) using the [`shared` API](./docs/API.md#shared).
 
 Example:
 ```js
@@ -134,7 +134,7 @@ app
 
 If sharing definitions with all commands including top-level is desired, the [`global` API](./docs/API.md#global) should be used instead to provide definitions on the global context.
 
-When defining on global or shared context, all definitions will be appended to previous and prepended to future commands.
+> **NOTE:** When defining on global or shared context, all definitions will be appended to previous and prepended to future commands in that exact order.
 
 > **NOTE:** You cannot define aliases on global or shared context.
 
