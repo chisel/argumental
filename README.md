@@ -95,9 +95,9 @@ app
 .parse(process.argv);
 ```
 
-If command is not called at the start of the chain, all declarations will be applied on "top-level". Example:
+If command is not called at the start of the chain, all declarations will be applied on "top-level".
 
-The following defines **app &lt;arg1&gt; --force** (considering application name is `app`, e.g. `npm install app -g`):
+Example: The following defines **app &lt;arg1&gt; --force** (considering application name is `app`, e.g. `npm install app -g`):
 ```js
 app
 .argument('<arg1>')
@@ -106,14 +106,15 @@ app
 .parse(process.argv);
 ```
 
-> **NOTE:** Top-level declaration can also be enabled anywhere in the chain by using the `top` property.
+> **NOTE:** Top-level declaration can also be enabled anywhere in the chain by using the [`top` API](./docs/API.md#top).
 
-Arguments, options, and actions can also be defined on a global context and applied to all commands (excluding top-level) using the `global` property. Example:
+Arguments, options, and actions can also be defined on the shared context and applied to all commands (excluding top-level) using the [`shared` API](./docs/API.md#shared).
 
+Example:
 ```js
 app
-.global
-// Define for all commands
+.shared
+// Define for all commands except top-level
 .option('--silent', 'Disables logs produced by this command')
 .command('command1')
 .actionDestruct(({ opts }) => {
@@ -123,7 +124,7 @@ app
 .actionDestruct(({ opts }) => {
   if ( ! opts.silent ) console.log('command2 used');
 })
-.global
+.shared
 // Perform after all commands
 .actionDestruct(({ opts, cmd }) => {
   if ( ! opts.silent ) console.log(`command ${cmd} has finished`);
@@ -131,9 +132,11 @@ app
 .parse(process.argv);
 ```
 
-When defining on global context, all definitions will be appended to previous and prepended to future commands.
+If sharing definitions with all commands including top-level is desired, the [`global` API](./docs/API.md#global) should be used instead to provide definitions on the global context.
 
-> **NOTE:** You cannot define aliases on global context.
+When defining on global or shared context, all definitions will be appended to previous and prepended to future commands.
+
+> **NOTE:** You cannot define aliases on global or shared context.
 
 # Validation
 
@@ -260,7 +263,7 @@ The following properties exist on all data objects provided with default events:
 
 > **NOTE:** The data state is different when an [immediate option](#immediate-options) is parsed.
 
-Registering event handlers for default events is [context-based](#context-and-chaining), meaning each call to the `on()` method registers the handler in the current context (command-specific, globally, or top-level).
+Registering event handlers for default events is [context-based](#context-and-chaining), meaning each call to the `on()` method registers the handler in the current context (command-specific, shared, global, or top-level).
 
 > **NOTE:** When the top-level command has no definitions (no arguments, options, or actions) and the [`topLevelPlainHelp` option](./docs/API.md#configoptions) is true (default state), no default events would be emitted when the top command is executed.
 
@@ -348,18 +351,18 @@ This principle is also applied to `validateDestruct()` and `sanitizeDestruct()` 
 
 The following demonstrates how various modules can be defined to perform specific tasks in Argumental:
 
-**Global Module** (runs before all others)
+**Shared Module** (runs before all others)
 ```ts
 import app from 'argumental';
-// Type definitions for the global data object
-import { GlobalData } from './types';
+// Type definitions for the shared data object
+import { SharedData } from './types';
 
 app
 // Configure app
 .config({  })
-// Define global action handler
-.global
-.actionDestruct<GlobalData>(({ data }) => {
+// Define shared action handler
+.shared
+.actionDestruct<SharedData>(({ data }) => {
 
   // Provide to all action handlers
   data.prop = 'value';
@@ -370,11 +373,11 @@ app
 **Command Module**
 ```ts
 import app from 'argumental';
-import { GlobalData } from './types';
+import { SharedData } from './types';
 
 app
 .command('cmd1')
-.actionDestruct<GlobalData>(({ data }) => {
+.actionDestruct<SharedData>(({ data }) => {
 
   // Perform command-specific task
   // data.prop is provided
@@ -386,7 +389,7 @@ app
 ```ts
 import app from 'argumental';
 
-import './global.module';
+import './shared.module';
 import './cmd1.module';
 
 app

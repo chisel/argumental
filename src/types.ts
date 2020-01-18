@@ -77,15 +77,15 @@ export namespace Argumental {
 
   }
 
-  export interface GlobalDeclaration {
+  export interface SharedDeclaration {
 
-    /** Global argument declarations. */
+    /** Shared/global argument declarations. */
     arguments: CommandArgumentDeclaration[];
-    /** Global option declarations. */
+    /** Shared/global option declarations. */
     options: OptionDeclaration[];
-    /** Global action handlers. */
+    /** Shared/global action handlers. */
     actions: CallbackFunction<ActionHandler|ActionHandlerWithDestructuringParams>[];
-    /** Global event declarations. */
+    /** Shared/global event declarations. */
     events: EventDeclarations;
 
   }

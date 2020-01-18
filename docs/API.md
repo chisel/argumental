@@ -23,6 +23,7 @@ Once imported, the following methods are available on the app object and all met
   - [sanitizeDestruct()](#sanitizeDestructsanitizers)
   - [version()](#versionversion)
   - [parse()](#parseargv)
+  - [shared](#shared)
   - [global](#global)
   - [top](#top)
   - [config()](#configoptions)
@@ -140,13 +141,17 @@ Sets the application version.
 Parses the passed in array of command-line arguments (e.g. `process.argv`) and ends the chain by returning a void promise which always resolves (unless an error is thrown from an action handler).
   - **argv**: Command-line arguments to parse.
 
+### shared
+
+Changes the definition context to [shared](../../../#chaining-and-context). All definitions after this would be applied to all commands (excluding the top-level command).
+
 ### global
 
-Turns [global declaration](../../../#chaining-and-context) on within the chain. Any calls to `argument()`, `option()`, and `action()` methods would define globals instead until context is changed.
+Changes the definition context to [global](../../../#chaining-and-context). All definitions after this would be applied to all commands (including the top-level command).
 
 ### top
 
-Turns [top-level declaration](../../../#chaining-and-context) on within the chain. Any calls to `argument()`, `option()`, and `action()` methods would define on top-level instead until context is changed.
+Changes the definition context to [top-level](../../../#chaining-and-context). All definitions after this would be applied the top-level command only.
 
 ### config(___options___)
 
@@ -155,7 +160,7 @@ Configures Argumental with the given options. Options object can have any of the
   - **topLevelPlainHelp**: When true, application help will be displayed when the top-level command is invoked without any arguments, options, or actions (defaults to `true`).  
   No [default events](../../../#default-events) would be emitted in this case.
   - **help**: A help renderer function to invoke when help must be rendered and logged to console. The function takes the following parameters:
-    - **definitions**: A key-value pair object containing all [command declarations](../src/types.ts#L91) where key `''` refers to the top-level command.
+    - **definitions**: A key-value pair object containing all [command declarations](../src/types.ts#L93) where key `''` refers to the top-level command.
     - **cmd**: The invoked command name.
 
 ### on(___event___, ___handler___)

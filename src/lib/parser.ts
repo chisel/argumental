@@ -248,7 +248,7 @@ export class Parser {
     const invalidLongName = option.longName && (option.longName.includes('--') || option.longName[0] === '-' || option.longName[option.longName.length - 1] === '-');
     const syntaxWithoutArgument = syntax.trim().replace(/<[a-z0-9-_]+>|\[[a-z0-9-_]+\]$/i, '').trim();
 
-    if ( (! syntaxWithoutArgument.match(/^-[a-z]( --[a-z-]{2,})?$/i) && ! syntaxWithoutArgument.match(/^--[a-z-]{2,}( -[a-z])?$/i)) || invalidLongName || (! option.shortName && ! option.longName) )
+    if ( (! syntaxWithoutArgument.match(/^-[a-z]( --[a-z0-9-]{2,})?$/i) && ! syntaxWithoutArgument.match(/^--[a-z0-9-]{2,}( -[a-z])?$/i)) || invalidLongName || (! option.shortName && ! option.longName) )
       throw new Error(`ARGUMENTAL_ERROR: Option ${syntax} has invalid syntax or contains invalid characters!`);
 
     return option;

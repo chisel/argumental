@@ -25,8 +25,8 @@ export class ArgumentalApp extends BuiltInValidators {
     }});
 
     // Define --help on all levels
-    this._globalDeclaration.options.push(this._parser.parseOption('--help', 'displays command help', false, null, false, undefined, true));
-    this._globalDeclaration.actions.push({ destructuringParams: true, callback: ({ opts, cmd, suspend }) => {
+    this._sharedDeclaration.options.push(this._parser.parseOption('--help', 'displays command help', false, null, false, undefined, true));
+    this._sharedDeclaration.actions.push({ destructuringParams: true, callback: ({ opts, cmd, suspend }) => {
 
       if ( ! opts.help ) return;
 
@@ -39,8 +39,21 @@ export class ArgumentalApp extends BuiltInValidators {
 
   /** Global declaration flag. */
   private _global: boolean = false;
-  /** Global declarations to prepend to all future command declarations. */
-  private _globalDeclaration: Argumental.GlobalDeclaration = {
+  /** Global declarations to prepend to all future command declarations (including top-level). */
+  private _globalDeclaration: Argumental.SharedDeclaration = {
+    arguments: [],
+    options: [],
+    actions: [],
+    events: {
+      before: [],
+      'before-actions': [],
+      after: []
+    }
+  };
+  /** Shared declaration flag. */
+  private _shared: boolean = false;
+  /** Shared declarations to prepend to all future command declarations (excluding top-level). */
+  private _sharedDeclaration: Argumental.SharedDeclaration = {
     arguments: [],
     options: [],
     actions: [],
@@ -157,6 +170,26 @@ export class ArgumentalApp extends BuiltInValidators {
       // Set for all options and arguments
       for ( const commandName in this._commands ) {
 
+        const component = this._commands[commandName][this._currentComponent];
+        const currentComponent = component[component.length - 1];
+
+        this._attachValidator(currentComponent, wrappedValidators, destructuringParams);
+
+      }
+
+      // Update global declaration
+      const component = this._globalDeclaration[this._currentComponent];
+      const currentComponent = component[component.length - 1];
+
+      this._attachValidator(currentComponent, wrappedValidators, destructuringParams);
+
+    }
+    // If shared
+    else if ( this._shared ) {
+
+      // Set for all options and arguments
+      for ( const commandName in this._commands ) {
+
         if ( commandName === '' ) continue;
 
         const component = this._commands[commandName][this._currentComponent];
@@ -167,7 +200,7 @@ export class ArgumentalApp extends BuiltInValidators {
       }
 
       // Update global declaration
-      const component = this._globalDeclaration[this._currentComponent];
+      const component = this._sharedDeclaration[this._currentComponent];
       const currentComponent = component[component.length - 1];
 
       this._attachValidator(currentComponent, wrappedValidators, destructuringParams);
@@ -199,10 +232,22 @@ export class ArgumentalApp extends BuiltInValidators {
     if ( this._currentCommand === null && ! this._global )
       throw new Error(`ARGUMENTAL_ERROR: Cannot add action handler because no command is being defined and global definition is disabled!`);
 
-    // Add the action handler globally and append to all commands
+    // Add the action handler globally and append to all commands (including top-level)
     if ( this._global ) {
 
       this._globalDeclaration.actions.push({ callback: handler, destructuringParams });
+
+      for ( const commandName in this._commands ) {
+
+        this._commands[commandName].actions.push({ callback: handler, destructuringParams });
+
+      }
+
+    }
+    // Add the action handler globally and append to all commands
+    else if ( this._shared ) {
+
+      this._sharedDeclaration.actions.push({ callback: handler, destructuringParams });
 
       for ( const commandName in this._commands ) {
 
@@ -222,6 +267,75 @@ export class ArgumentalApp extends BuiltInValidators {
     // If top-level, set original to false
     if ( this._currentCommand === '' && ! this._global )
       this._commands[this._currentCommand].original = false;
+
+  }
+
+  /**
+  * Determines if argument already exists considering the global and shared flags.
+  * @param argument The argument declaration.
+  */
+  private _doesArgumentAlreadyExist(argument: Argumental.ArgumentDeclaration): boolean {
+
+    // Command-specific
+    if ( ! this._global && ! this._shared ) {
+
+      return !! this._commands[this._currentCommand].arguments.filter(arg => arg.apiName === argument.apiName).length;
+
+    }
+
+    // Should not exist on any commands and on shared and global declarations
+    if ( this._globalDeclaration.arguments.filter(arg => arg.apiName === argument.apiName).length ) return true;
+    if ( this._sharedDeclaration.arguments.filter(arg => arg.apiName === argument.apiName).length ) return true;
+
+    for ( const commandName in this._commands ) {
+
+      if ( this._shared && commandName === '' ) continue;
+
+      for ( const arg of this._commands[commandName].arguments ) {
+
+        if ( arg.apiName === argument.apiName ) return true;
+
+      }
+
+    }
+
+    return false;
+
+  }
+
+  /**
+  * Determines if option already exists considering the global and shared flags.
+  * @param option The option declaration.
+  */
+  private _doesOptionAlreadyExist(option: Argumental.OptionDeclaration): boolean {
+
+    // Command-specific
+    if ( ! this._global && ! this._shared ) {
+
+      return !! this._commands[this._currentCommand].options
+      .filter(opt => (opt.longName && opt.longName === option.longName) || (opt.shortName && option.shortName === opt.shortName) || (opt.apiName && opt.apiName === option.apiName)).length;
+
+    }
+
+    // Should not exist on any commands and on shared and global declarations
+    if ( this._globalDeclaration.options.filter(opt => (opt.longName && opt.longName === option.longName) || (opt.shortName && option.shortName === opt.shortName) || (opt.apiName && opt.apiName === option.apiName)).length ) return true;
+    if ( this._sharedDeclaration.options.filter(opt => (opt.longName && opt.longName === option.longName) || (opt.shortName && option.shortName === opt.shortName) || (opt.apiName && opt.apiName === option.apiName)).length ) return true;
+
+    for ( const commandName in this._commands ) {
+
+      if ( this._shared && commandName === '' ) continue;
+
+      for ( const opt of this._commands[commandName].options ) {
+
+        if ( opt.longName && opt.longName === option.longName ) return true;
+        if ( opt.shortName && opt.shortName === option.shortName ) return true;
+        if ( opt.apiName && opt.apiName === option.apiName ) return true;
+
+      }
+
+    }
+
+    return false;
 
   }
 
@@ -289,10 +403,28 @@ export class ArgumentalApp extends BuiltInValidators {
   /**
   * Makes any following argument, option, and action declaration globally applied to all commands (appended to previously declared commands and prepended to future command declarations) unless the command() function is called.
   */
+  public get shared(): ArgumentalApp {
+
+    // Set the shared flag
+    this._shared = true;
+    // Reset the global flag
+    this._global = false;
+    // Reset the current component
+    this._currentComponent = null;
+
+    return this;
+
+  }
+
+  /**
+  * Makes any following argument, option, and action declaration globally applied to all commands excluding top-level (appended to previously declared commands and prepended to future command declarations) unless the command() function is called.
+  */
   public get global(): ArgumentalApp {
 
     // Set the global flag
     this._global = true;
+    // Reset the shared flag
+    this._shared = false;
     // Reset the current component
     this._currentComponent = null;
 
@@ -307,6 +439,8 @@ export class ArgumentalApp extends BuiltInValidators {
 
     // Reset the global flag
     this._global = false;
+    // Reset the shared flag
+    this._shared = false;
     // Reset the current component
     this._currentComponent = null;
     // Set the current command to top-level
@@ -323,21 +457,39 @@ export class ArgumentalApp extends BuiltInValidators {
   public description(text: string): ArgumentalApp {
 
     // Check if current component is not set, set for current command
-    if ( ! this._currentComponent && ! this._global ) {
+    if ( ! this._currentComponent && (! this._global || ! this._shared) ) {
 
       this._commands[this._currentCommand].description = text;
 
     }
     // If global but no component selected
-    else if ( this._global && ! this._currentComponent ) {
+    else if ( (this._global || this._shared) && ! this._currentComponent ) {
 
-      throw new Error('ARGUMENTAL_ERROR: Cannot set description on the global context because no command, option, or argument is selected!');
+      throw new Error('ARGUMENTAL_ERROR: Cannot set description on the global or shared context because no command, option, or argument is selected!');
 
     }
     else {
 
       // If global
       if ( this._global ) {
+
+        // Set for all commands' components (last component)
+        for ( const commandName in this._commands ) {
+
+          const component = this._commands[commandName][this._currentComponent];
+
+          component[component.length - 1].description = text;
+
+        }
+
+        // Update global declaration
+        const component = this._globalDeclaration[this._currentComponent];
+
+        component[component.length - 1].description = text;
+
+      }
+      // If shared
+      else if ( this._shared ) {
 
         // Set for all commands' components (last component)
         for ( const commandName in this._commands ) {
@@ -351,7 +503,7 @@ export class ArgumentalApp extends BuiltInValidators {
         }
 
         // Update global declaration
-        const component = this._globalDeclaration[this._currentComponent];
+        const component = this._sharedDeclaration[this._currentComponent];
 
         component[component.length - 1].description = text;
 
@@ -387,6 +539,24 @@ export class ArgumentalApp extends BuiltInValidators {
       // Set for all options
       for ( const commandName in this._commands ) {
 
+        const component = this._commands[commandName].options;
+
+        component[component.length - 1].required = value;
+
+      }
+
+      // Update global declaration
+      const component = this._globalDeclaration.options;
+
+      component[component.length - 1].required = value;
+
+    }
+    // If shared
+    else if ( this._shared ) {
+
+      // Set for all options
+      for ( const commandName in this._commands ) {
+
         if ( commandName === '' ) continue;
 
         const component = this._commands[commandName].options;
@@ -396,7 +566,7 @@ export class ArgumentalApp extends BuiltInValidators {
       }
 
       // Update global declaration
-      const component = this._globalDeclaration.options;
+      const component = this._sharedDeclaration.options;
 
       component[component.length - 1].required = value;
 
@@ -430,6 +600,24 @@ export class ArgumentalApp extends BuiltInValidators {
       // Set for all options
       for ( const commandName in this._commands ) {
 
+        const component = this._commands[commandName].options;
+
+        component[component.length - 1].multi = value;
+
+      }
+
+      // Update global declaration
+      const component = this._globalDeclaration.options;
+
+      component[component.length - 1].multi = value;
+
+    }
+    // If shared
+    else if ( this._shared ) {
+
+      // Set for all options
+      for ( const commandName in this._commands ) {
+
         if ( commandName === '' ) continue;
 
         const component = this._commands[commandName].options;
@@ -439,7 +627,7 @@ export class ArgumentalApp extends BuiltInValidators {
       }
 
       // Update global declaration
-      const component = this._globalDeclaration.options;
+      const component = this._sharedDeclaration.options;
 
       component[component.length - 1].multi = value;
 
@@ -473,6 +661,30 @@ export class ArgumentalApp extends BuiltInValidators {
       // Set for all options or arguments
       for ( const commandName in this._commands ) {
 
+        const component = this._commands[commandName][this._currentComponent];
+
+        if ( this._currentComponent === 'arguments' )
+          (<Argumental.CommandArgumentDeclaration>component[component.length - 1]).default = value;
+        else
+          (<Argumental.OptionDeclaration>component[component.length - 1]).argument.default = value;
+
+      }
+
+      // Update global declaration
+      const component = this._globalDeclaration[this._currentComponent];
+
+      if ( this._currentComponent === 'arguments' )
+        (<Argumental.CommandArgumentDeclaration>component[component.length - 1]).default = value;
+      else
+        (<Argumental.OptionDeclaration>component[component.length - 1]).argument.default = value;
+
+    }
+    // If shared
+    else if ( this._shared ) {
+
+      // Set for all options or arguments
+      for ( const commandName in this._commands ) {
+
         if ( commandName === '' ) continue;
 
         const component = this._commands[commandName][this._currentComponent];
@@ -485,7 +697,7 @@ export class ArgumentalApp extends BuiltInValidators {
       }
 
       // Update global declaration
-      const component = this._globalDeclaration[this._currentComponent];
+      const component = this._sharedDeclaration[this._currentComponent];
 
       if ( this._currentComponent === 'arguments' )
         (<Argumental.CommandArgumentDeclaration>component[component.length - 1]).default = value;
@@ -525,6 +737,24 @@ export class ArgumentalApp extends BuiltInValidators {
       // Set for all options
       for ( const commandName in this._commands ) {
 
+        const component = this._commands[commandName].options;
+
+        component[component.length - 1].immediate = value;
+
+      }
+
+      // Update global declaration
+      const component = this._globalDeclaration.options;
+
+      component[component.length - 1].immediate = value;
+
+    }
+    // If shared
+    else if ( this._shared ) {
+
+      // Set for all options
+      for ( const commandName in this._commands ) {
+
         if ( commandName === '' ) continue;
 
         const component = this._commands[commandName].options;
@@ -534,7 +764,7 @@ export class ArgumentalApp extends BuiltInValidators {
       }
 
       // Update global declaration
-      const component = this._globalDeclaration.options;
+      const component = this._sharedDeclaration.options;
 
       component[component.length - 1].immediate = value;
 
@@ -641,6 +871,8 @@ export class ArgumentalApp extends BuiltInValidators {
 
     // Reset the global flag
     this._global = false;
+    // Reset the shared flag
+    this._shared = false;
     // Reset the current component
     this._currentComponent = null;
     // Set the current command pointer
@@ -651,11 +883,11 @@ export class ArgumentalApp extends BuiltInValidators {
       name: name.trim(),
       description: description || null,
       aliases: [],
-      arguments: _.cloneDeep(this._globalDeclaration.arguments),
-      options: _.cloneDeep(this._globalDeclaration.options),
-      actions: _.cloneDeep(this._globalDeclaration.actions),
+      arguments: _.assign([], _.cloneDeep(this._globalDeclaration.arguments), _.cloneDeep(this._sharedDeclaration.arguments)),
+      options: _.assign([], _.cloneDeep(this._globalDeclaration.options), _.cloneDeep(this._sharedDeclaration.options)),
+      actions: _.assign([], _.cloneDeep(this._globalDeclaration.actions), _.cloneDeep(this._sharedDeclaration.actions)),
       order: ++this._lastCommandOrder,
-      events: _.cloneDeep(this._globalDeclaration.events)
+      events: _.assign({}, _.cloneDeep(this._globalDeclaration.events), _.cloneDeep(this._sharedDeclaration.events)),
     };
 
     // Register in conflicting names
@@ -674,6 +906,10 @@ export class ArgumentalApp extends BuiltInValidators {
     // Check if global flag is set
     if ( this._global )
       throw new Error('ARGUMENTAL_ERROR: Cannot define alias globally!');
+
+    // Check if shared flag is set
+    if ( this._shared )
+      throw new Error('ARGUMENTAL_ERROR: Cannot define shared alias!');
 
     // Check if alias name conflicts
     if ( this._conflicts.includes(name.trim()) )
@@ -717,13 +953,15 @@ export class ArgumentalApp extends BuiltInValidators {
   public argument(syntax: string, description?: string, validators?: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, defaultValue?: any): ArgumentalApp {
 
     // Check if no command is being declared and global flag is not set
-    if ( this._currentCommand === null && ! this._global )
-      throw new Error(`ARGUMENTAL_ERROR: Cannot define argument ${syntax} because no command is being defined and global definition is disabled!`);
+    if ( this._currentCommand === null && ! this._global && ! this._shared )
+      throw new Error(`ARGUMENTAL_ERROR: Cannot define argument ${syntax} because no command is being defined and global and shared definitions are disabled!`);
 
     // Check if last argument was rest
-    if ( this._global ) {
+    if ( this._global || this._shared ) {
 
       for ( const commandName in this._commands ) {
+
+        if ( this._shared && commandName === '' ) continue;
 
         const cmdArgs = this._commands[commandName].arguments;
 
@@ -748,16 +986,25 @@ export class ArgumentalApp extends BuiltInValidators {
     });
 
     // Check if argument is already defined for current command or globally
-    if (
-      (this._global && this._globalDeclaration.arguments.filter(arg => arg.apiName === argument.apiName).length) ||
-      (this._currentCommand !== null && this._commands[this._currentCommand].arguments.filter(arg => arg.apiName === argument.apiName).length)
-    )
+    if ( this._doesArgumentAlreadyExist(argument) )
       throw new Error(`ARGUMENTAL_ERROR: Argument ${argument.apiName} is already defined!`);
 
-    // If global flag is enabled, add argument to global declaration and append to all commands
+    // If global flag is enabled, add argument to global declaration and append to all commands (including top-level)
     if ( this._global ) {
 
       this._globalDeclaration.arguments.push(argument);
+
+      for ( const commandName in this._commands ) {
+
+        this._commands[commandName].arguments.push(argument);
+
+      }
+
+    }
+    // If shared flag is enabled, add argument to global declaration and append to all commands (excluding top-level)
+    else if ( this._shared ) {
+
+      this._sharedDeclaration.arguments.push(argument);
 
       for ( const commandName in this._commands ) {
 
@@ -804,24 +1051,33 @@ export class ArgumentalApp extends BuiltInValidators {
   public option(syntax: string, description: string, required: boolean, validators: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, multi: boolean, defaultValue: any, immediate: boolean): ArgumentalApp;
   public option(syntax: string, description?: string, required?: boolean, validators?: Argumental.Validator|RegExp|Array<RegExp|Argumental.Validator>, multi?: boolean, defaultValue?: any, immediate?: boolean): ArgumentalApp {
 
-    // Check if no command is being declared and global flag is not set
-    if ( this._currentCommand === null && ! this._global )
-      throw new Error(`ARGUMENTAL_ERROR: Cannot define option ${syntax} because no command is being defined and global definition is disabled!`);
+    // Check if no command is being declared and global or shared flags are not set
+    if ( this._currentCommand === null && ! this._global && ! this._shared )
+      throw new Error(`ARGUMENTAL_ERROR: Cannot define option ${syntax} because no command is being defined and global and shared definitions are disabled!`);
 
     // Parse option
     const option = this._parser.parseOption(syntax, description, required, validators, multi, defaultValue, immediate);
 
     // Check if option is already defined for current command or globally
-    if (
-      (this._global && this._globalDeclaration.options.filter(opt => (opt.longName && opt.longName === option.longName) || (opt.shortName && option.shortName === opt.shortName) || (opt.apiName && opt.apiName === option.apiName)).length) ||
-      (this._currentCommand !== null && this._commands[this._currentCommand].options.filter(opt => (opt.longName && opt.longName === option.longName) || (opt.shortName && option.shortName === opt.shortName) || (opt.apiName && opt.apiName === option.apiName)).length)
-    )
+    if ( this._doesOptionAlreadyExist(option) )
       throw new Error(`ARGUMENTAL_ERROR: Option ${option.longName || option.shortName} is already defined!`);
 
-    // If global flag is enabled, add option to global declaration and append to all commands
+    // If global flag is enabled, add option to global declaration and append to all commands (including top-level)
     if ( this._global ) {
 
       this._globalDeclaration.options.push(option);
+
+      for ( const commandName in this._commands ) {
+
+        this._commands[commandName].options.push(option);
+
+      }
+
+    }
+    // If shared flag is enabled, add option to global declaration and append to all commands (excluding top-level)
+    else if ( this._shared ) {
+
+      this._sharedDeclaration.options.push(option);
 
       for ( const commandName in this._commands ) {
 
@@ -875,6 +1131,24 @@ export class ArgumentalApp extends BuiltInValidators {
         if ( ! this._globalDeclaration.events[event] ) this._globalDeclaration.events[event] = [];
 
         this._globalDeclaration.events[event].push(handler);
+
+        // Append to all commands
+        for ( const commandName in this._commands ) {
+
+          if ( ! this._commands[commandName].events[event] ) this._commands[commandName].events[event] = [];
+
+          this._commands[commandName].events[event].push(handler);
+
+        }
+
+      }
+      // If shared context
+      else if ( this._shared ) {
+
+        // Add to global declaration
+        if ( ! this._sharedDeclaration.events[event] ) this._sharedDeclaration.events[event] = [];
+
+        this._sharedDeclaration.events[event].push(handler);
 
         // Append to all commands
         for ( const commandName in this._commands ) {

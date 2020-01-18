@@ -10,8 +10,8 @@ describe('App', function() {
 
     app
     .version('1.0.0')
-    .global
-    .argument('[global_argument]', 'A global argument')
+    .shared
+    .argument('[shared_argument]', 'A shared argument')
     .option('-l --log [level]', 'Enables logging', false, /^verbose$|^info$|^warn$|^error$/i, true, 'info')
     .action(() => { })
     .command('script new', 'Uploads a new script')
@@ -25,7 +25,7 @@ describe('App', function() {
     .option('-c --clean [force]', 'Cleans the scripts directory (if force is true, kills any script processes before cleaning)', false, app.BOOLEAN)
     .action(() => { })
     .action(() => { })
-    .global
+    .shared
     .action(() => { });
 
     const commands: Argumental.List<Argumental.CommandDeclaration> = (<any>app)._commands;
@@ -39,9 +39,9 @@ describe('App', function() {
 
     expect(newScriptCommand.arguments).to.deep.equal([
       {
-        name: 'global_argument',
-        apiName: 'globalArgument',
-        description: 'A global argument',
+        name: 'shared_argument',
+        apiName: 'sharedArgument',
+        description: 'A shared argument',
         required: false,
         validators: [],
         default: undefined,
@@ -205,7 +205,7 @@ describe('App', function() {
     try {
 
       new ArgumentalApp()
-      .global
+      .shared
       .argument('<arg1>')
       .command('test')
       .argument('<arg1>');
@@ -239,7 +239,7 @@ describe('App', function() {
     try {
 
       new ArgumentalApp()
-      .global
+      .shared
       .option('-l')
       .command('test')
       .option('-l');
@@ -257,7 +257,7 @@ describe('App', function() {
     try {
 
       new ArgumentalApp()
-      .global
+      .shared
       .alias('s')
 
     }
@@ -268,7 +268,7 @@ describe('App', function() {
     }
 
     expect(defError).not.to.be.undefined;
-    expect(defError.message).to.equal('ARGUMENTAL_ERROR: Cannot define alias globally!');
+    expect(defError.message).to.equal('ARGUMENTAL_ERROR: Cannot define shared alias!');
 
     try {
 
@@ -324,7 +324,7 @@ describe('App', function() {
     try {
 
       new ArgumentalApp()
-      .global
+      .shared
       .argument('<...args>')
       .command('blah')
       .argument('[arg2]')
@@ -476,7 +476,7 @@ describe('App', function() {
     const flags: string[] = [];
 
     await app
-    .global
+    .shared
     .action(() => {
       flags.push('GLOB1');
     })
@@ -487,7 +487,7 @@ describe('App', function() {
     .action(() => {
       flags.push('DIR2');
     })
-    .global
+    .shared
     .action(() => {
       flags.push('GLOB2');
     })
@@ -802,7 +802,7 @@ describe('App', function() {
       flags.push('LAST');
 
     })
-    .global
+    .shared
     .argument('<arg1>')
     .top
     .option('-t --test <arg>');
@@ -851,8 +851,8 @@ describe('App', function() {
     .validate(app.BOOLEAN)
     .action(actionHandler);
 
-    // Global declarations
-    app.global
+    // shared declarations
+    app.shared
     .argument('[script_type]')
     .description('Script type')
     .sanitize(sanitizer)
@@ -1183,7 +1183,7 @@ describe('App', function() {
     .on('before', beforeHandler)
     .on('after', afterHandler1)
 
-    .global
+    .shared
     .on('after', afterHandler2)
 
     .top
@@ -1237,6 +1237,251 @@ describe('App', function() {
     await app.parse(['node', 'test']);
     expect(eventsFlow).to.deep.equal(['after1']);
     eventsFlow = [];
+
+  });
+
+  it('should define on global and shared context correctly', async function() {
+
+    const app = new ArgumentalApp();
+
+    app
+    .command('cmd1')
+    .argument('<arg0>')
+    .global
+    .argument('<arg1>')
+    .option('-o')
+    .multi()
+    .shared
+    .argument('[arg2]')
+    .default(13);
+
+    const defs: Argumental.List<Argumental.CommandDeclaration> = (<any>app)._commands;
+    const topDef: Argumental.CommandDeclaration = defs[''];
+    const cmd1Def: Argumental.CommandDeclaration = defs['cmd1'];
+
+    expect(topDef.arguments).to.deep.equal([
+      {
+        name: 'arg1',
+        apiName: 'arg1',
+        required: true,
+        description: null,
+        default: undefined,
+        validators: [],
+        rest: false
+      }
+    ]);
+
+    expect(topDef.options).to.deep.equal([
+      {
+        shortName: null,
+        longName: 'help',
+        apiName: 'help',
+        required: false,
+        multi: false,
+        immediate: true,
+        argument: null,
+        description: 'displays application help'
+      },
+      {
+        shortName: 'o',
+        longName: null,
+        apiName: null,
+        required: false,
+        multi: true,
+        immediate: false,
+        argument: null,
+        description: null
+      }
+    ]);
+
+    expect(cmd1Def.arguments).to.deep.equal([
+      {
+        name: 'arg0',
+        apiName: 'arg0',
+        required: true,
+        description: null,
+        default: undefined,
+        validators: [],
+        rest: false
+      },
+      {
+        name: 'arg1',
+        apiName: 'arg1',
+        required: true,
+        description: null,
+        default: undefined,
+        validators: [],
+        rest: false
+      },
+      {
+        name: 'arg2',
+        apiName: 'arg2',
+        required: false,
+        description: null,
+        default: 13,
+        validators: [],
+        rest: false
+      }
+    ]);
+
+    expect(cmd1Def.options).to.deep.equal([
+      {
+        shortName: null,
+        longName: 'help',
+        apiName: 'help',
+        required: false,
+        multi: false,
+        immediate: true,
+        argument: null,
+        description: 'displays command help'
+      },
+      {
+        shortName: 'o',
+        longName: null,
+        apiName: null,
+        required: false,
+        multi: true,
+        immediate: false,
+        argument: null,
+        description: null
+      }
+    ]);
+
+  });
+
+  it('should throw errors correctly when defining incorrectly on global and shared context', async function() {
+
+    let thrownError: Error;
+
+    try {
+
+      new ArgumentalApp()
+      .shared
+      .argument('<arg>')
+      .global
+      .argument('<arg>');
+
+    }
+    catch (error) {
+
+      thrownError = error;
+
+    }
+
+    expect(thrownError).to.not.be.undefined;
+    expect(thrownError.message).to.equal('ARGUMENTAL_ERROR: Argument arg is already defined!');
+    thrownError = undefined;
+
+    try {
+
+      new ArgumentalApp()
+      .shared
+      .option('--option1')
+      .global
+      .option('--option-1');
+
+    }
+    catch (error) {
+
+      thrownError = error;
+
+    }
+
+    expect(thrownError).to.not.be.undefined;
+    expect(thrownError.message).to.equal('ARGUMENTAL_ERROR: Option option-1 is already defined!');
+    thrownError = undefined;
+
+    try {
+
+      new ArgumentalApp()
+      .argument('<arg>')
+      .shared
+      .argument('<arg>');
+
+    }
+    catch (error) {
+
+      thrownError = error;
+
+    }
+
+    expect(thrownError).to.be.undefined;
+
+    try {
+
+      new ArgumentalApp()
+      .command('cmd')
+      .argument('<arg>')
+      .shared
+      .argument('<arg>');
+
+    }
+    catch (error) {
+
+      thrownError = error;
+
+    }
+
+    expect(thrownError).to.not.be.undefined;
+    expect(thrownError.message).to.equal('ARGUMENTAL_ERROR: Argument arg is already defined!');
+    thrownError = undefined;
+
+    try {
+
+      new ArgumentalApp()
+      .command('cmd')
+      .argument('<arg>')
+      .global
+      .argument('<arg>');
+
+    }
+    catch (error) {
+
+      thrownError = error;
+
+    }
+
+    expect(thrownError).to.not.be.undefined;
+    expect(thrownError.message).to.equal('ARGUMENTAL_ERROR: Argument arg is already defined!');
+    thrownError = undefined;
+
+    try {
+
+      new ArgumentalApp()
+      .command('cmd')
+      .argument('<...arg>')
+      .global
+      .argument('<after-rest>');
+
+    }
+    catch (error) {
+
+      thrownError = error;
+
+    }
+
+    expect(thrownError).to.not.be.undefined;
+    expect(thrownError.message).to.equal('ARGUMENTAL_ERROR: Cannot define argument <after-rest> after a rest argument!');
+    thrownError = undefined;
+
+    try {
+
+      new ArgumentalApp()
+      .shared
+      .argument('<arg>')
+      .command('cmd')
+      .argument('<arg>');
+
+    }
+    catch (error) {
+
+      thrownError = error;
+
+    }
+
+    expect(thrownError).to.not.be.undefined;
+    expect(thrownError.message).to.equal('ARGUMENTAL_ERROR: Argument arg is already defined!');
+    thrownError = undefined;
 
   });
 
