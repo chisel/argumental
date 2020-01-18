@@ -1,7 +1,7 @@
 import app from '../../..';
 
 app
-.global
+.shared
 // Run before all handlers
 .actionDestruct<ActionData>(({ data }) => {
 
