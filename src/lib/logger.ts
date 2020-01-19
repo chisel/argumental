@@ -322,7 +322,7 @@ export class Logger {
       for ( const argument of definitions[cmd].arguments ) {
 
         // Argument name
-        argumentsSection += `${this._pad(2)}${color.magenta((argument.rest ? '...' : '') + argument.name.padEnd(longest))}`;
+        argumentsSection += `${this._pad(2)}${color.magenta((argument.rest ? '...' : '') + argument.name.padEnd(longest - (argument.rest ? 3 : 0)))}`;
         // Argument requirement
         if ( requirementsDiffer ) argumentsSection += `${this._pad()}${argument.required ? color.bold('required') : color.italic.dim('optional')}`;
         // Argument description
