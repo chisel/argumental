@@ -470,6 +470,17 @@ export class Parser {
 
       }
 
+      // Multi options
+      if ( option.multi && option.argument ) {
+
+        // If single value, wrap it with an array
+        if ( option.shortName && parsedArgs.opts[option.shortName] !== undefined && ! this._isArray(parsedArgs.opts[option.shortName]) )
+          parsedArgs.opts[option.shortName] = [<string>parsedArgs.opts[option.shortName]];
+        if ( option.longName && parsedArgs.opts[option.apiName] !== undefined && ! this._isArray(parsedArgs.opts[option.apiName]) )
+          parsedArgs.opts[option.apiName] = [<string>parsedArgs.opts[option.apiName]];
+
+      }
+
     }
 
     // Remove wrapping "" for string values
