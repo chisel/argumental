@@ -46,7 +46,7 @@ app
 .option('-o --overwrite')
 .description('overwrites any command batches already existing')
 
-.action((args, opts) => {
+.action((args: LoadArgs, opts) => {
 
   // Add command batches
   for ( const key in args.config ) {

@@ -12,7 +12,7 @@ app
 .argument('[...vars]')
 .description('variables to insert into the command batch')
 // Wrap all variables with "" if they contain spaces
-.sanitize(vars => vars.map((v: string[]) => v.includes(' ') ? `"${v}"` : v))
+.sanitize(vars => vars.map((v: string) => v.includes(' ') ? `"${v}"` : v))
 .default([])
 
 .action(async args => {
