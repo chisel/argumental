@@ -1,8 +1,8 @@
 ![Argumental](./images/display.png)
 
-Argumental is a framework for building CLI applications using Node.js, which enables fast development by providing an easy-to-use API with a middleware stack system and useful built-in features.
+Argumental is a framework for building CLI applications using Node.js. It which enables fast development by providing an easy-to-use API with a middleware stack system and useful built-in features.
 
-With Argumental, you can:
+With Argumental you can:
 
   - Develop CLI apps faster by reusing code through a middleware stack system
   - Apply input validation and sanitization with ease
