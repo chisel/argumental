@@ -262,7 +262,7 @@ export class Logger {
       // Top-level specific signature
       else {
 
-        segments = segments.concat(this._getArgumentsSignatureList(definitions['']).map(sig => chalk.magenta(sig)));
+        segments = segments.concat(this._getArgumentsSignatureList(definitions['']).map(sig => color.magenta(sig)));
         segments.push(color.yellow(this._getOptionsSignature(definitions[''])));
 
       }
@@ -278,7 +278,7 @@ export class Logger {
       if ( this._appName ) segments.push(this._appName);
 
       segments.push(color.blueBright(cmd));
-      segments = segments.concat(this._getArgumentsSignatureList(definitions[cmd]).map(sig => chalk.magenta(sig)));
+      segments = segments.concat(this._getArgumentsSignatureList(definitions[cmd]).map(sig => color.magenta(sig)));
       segments.push(color.yellow(this._getOptionsSignature(definitions[cmd])));
 
       usageSection += segments.join(' ');
