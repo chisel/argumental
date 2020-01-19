@@ -1,4 +1,4 @@
-declare interface ActionData {
+declare interface AppData {
 
   apiKey: string;
   apiHost: string;

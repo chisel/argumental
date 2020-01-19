@@ -15,16 +15,16 @@ app
 .validate(value => ! value.trim().length ? new Error('Invalid query!') : value)
 // NOTE: Returning an error object would work the same as throwing one
 
-.actionDestruct<ActionData>(async ({ args, data }) => {
+.action(async (args) => {
 
   // Search for breed
   const breeds: Breed[] = await request.get({
-    url: data.apiHost + '/breeds/search',
+    url: app.data<AppData>().apiHost + '/breeds/search',
     qs: {
       q: args.query
     },
     headers: {
-      'x-api-key': data.apiKey
+      'x-api-key': app.data<AppData>().apiKey
     },
     json: true
   });
@@ -36,13 +36,13 @@ app
 
   // Use the first found breed to search for an image
   const images: ImageResult[] = await request.get({
-    url: data.apiHost + '/images/search',
+    url: app.data<AppData>().apiHost + '/images/search',
     qs: {
       breed_id: breeds[0].id,
       size: 'med'
     },
     headers: {
-      'x-api-key': data.apiKey
+      'x-api-key': app.data<AppData>().apiKey
     },
     json: true
   });

@@ -21,16 +21,16 @@ app
 
 .option('-i --imperial', 'displays imperial units')
 
-.actionDestruct<ActionData>(async ({ opts, data }) => {
+.actionDestruct(async ({ opts }) => {
 
   const breeds: Breed[] = await request.get({
-    url: data.apiHost + '/breeds',
+    url: app.data<AppData>().apiHost + '/breeds',
     qs: {
       page: opts.page,
       limit: opts.limit
     },
     headers: {
-      'x-api-key': data.apiKey
+      'x-api-key': app.data<AppData>().apiKey
     },
     json: true
   });
