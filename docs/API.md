@@ -1,8 +1,8 @@
 # API Reference
 
-Argumental provides a [chainable API](../../../#chaining-and-context) to define the whole application in one go (unless a [modular approach](../../../#modular-design) is desired).
+Argumental provides a chainable API to define the whole application in one go (unless a [modular approach](../../../#modular-design) is desired where multiple chains are used).
 
-Once imported, the following methods are available on the app object and all methods return a reference to the parent object for chaining (except for `parse()` and the [built-in validators](#built-in-validators)):
+Once imported, the following methods are available on the app object and all methods return a reference to the parent object for chaining (except for [`parse()`](#parseargv), [`emit()`](#emitevent-data), and the [built-in validators](#built-in-validators)):
 
 ## Index
 
@@ -21,6 +21,7 @@ Once imported, the following methods are available on the app object and all met
   - [validateDestruct()](#validatedestructvalidators)
   - [sanitize()](#sanitizesanitizers)
   - [sanitizeDestruct()](#sanitizeDestructsanitizers)
+  - [data()](#data)
   - [version()](#versionversion)
   - [parse()](#parseargv)
   - [shared](#shared)
@@ -79,11 +80,8 @@ Defines an action for the current command.
     If option defined argument and can occur multiple times, the value would be an array containing each occurrence's value.
     - **suspend**: A function which suspends next action handlers from being executed when called.
     - **cmd**: The invoked command's name.
-    - **data**: An object shared between all action handlers of the same command to pass data around.
 
 Action handlers can return a promise for async execution.
-
-> **NOTE:** If using TypeScript, you can provide the `data` object's type by using the this method's generic signature `action<T>()`.
 
 ### actionDestruct(___handler___)
 
@@ -131,10 +129,18 @@ Alias for `validate()`.
 
 Alias for `validateDestruct()`.
 
+### data()
+
+Returns an object for sharing data throughout the application (useful for apps with [modular design](../../../#modular-design)).
+
+> **NOTE:** If using TypeScript, type definition for the returned data object can be provided by using the generic signature of this method `data<T>()`.
+
 ### version(___version___)
 
 Sets the application version.
   - **version**: The version of the application.
+
+This method defines `-v --version` option on the top-level command only regardless of the current context.
 
 ### parse(___argv___)
 
@@ -143,15 +149,15 @@ Parses the passed in array of command-line arguments (e.g. `process.argv`) and e
 
 ### shared
 
-Changes the definition context to [shared](../../../#chaining-and-context). All definitions after this would be applied to all commands (excluding the top-level command).
+Changes the definition context to [shared](../../../#definition-context). All definitions after this would be applied to all commands (excluding the top-level command).
 
 ### global
 
-Changes the definition context to [global](../../../#chaining-and-context). All definitions after this would be applied to all commands (including the top-level command).
+Changes the definition context to [global](../../../#definition-context). All definitions after this would be applied to all commands (including the top-level command).
 
 ### top
 
-Changes the definition context to [top-level](../../../#chaining-and-context). All definitions after this would be applied the top-level command only.
+Changes the definition context to [top-level](../../../#definition-context). All definitions after this would be applied the top-level command only.
 
 ### config(___options___)
 

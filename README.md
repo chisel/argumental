@@ -1,21 +1,22 @@
 ![Argumental](./images/display.png)
 
-Argumental is a framework for building CLI applications using Node.js, which enables fast development by providing an easy-to-use API with a middleware stack system.
+Argumental is a framework for building CLI applications using Node.js, which enables fast development by providing an easy-to-use API with a middleware stack system and useful built-in features.
 
 With Argumental, you can:
 
   - Develop CLI apps faster by reusing code through a middleware stack system
-  - Create middleware stacks for input validation and sanitization
+  - Apply input validation and sanitization with ease
+  - Define event-driven behaviors
+  - Implement a modular design
   - Improve code readability by using an easy-to-understand API
-  - Design modular code
-  - ...and beyond!
+  - ...and more!
 
 # Index
 
   1. [Installation](#installation)
   2. [Quick Start](#quick-start)
   3. [API](#api)
-  4. [Chaining And Context](#chaining-and-context)
+  4. [Definition Context](#definition-context)
   5. [Validation](#validation)
   6. [Rest Arguments](#rest-arguments)
   7. [Immediate Options](#immediate-options)
@@ -77,10 +78,11 @@ app
 
 The [API reference](./docs/API.md) documents all available methods on the app object. The rest of this documentation assumes you are familiar with Argumental's API.
 
-# Chaining And Context
+# Definition Context
 
-Each call to the `command()` method determines that until this method is called again, all calls to other methods are within this command's context. Example:
+Each call to the [`command()`](./docs/API.md#commandname-description) method determines that until this method is called again, all calls to other methods are within this command's context.
 
+Example:
 ```js
 app
 .command('command1')
@@ -244,17 +246,23 @@ Argumental apps run in the following stages:
   1. App is defined (running all calls to the API)
   2. CLI arguments are parsed
   3. Parsed arguments are validated based on the definitions
-  4. Event `before` is emitted
+  4. Event `validators:before` is emitted
   5. Validators/sanitizers are run
-  6. Default values are applied
-  7. Event `before-actions` is emitted
-  8. Action handlers are run
-  9. Event `after` is emitted
+  6. Event `validators:after` is emitted
+  7. Event `defaults:before` is emitted
+  8. Default values are applied
+  9. Event `defaults:after` is emitted
+  10. Event `actions:before` is emitted
+  11. Action handlers are run
+  12. Event `actions:after` is emitted
 
 All default events provide a data object containing the parsed arguments at that stage. The data state for each event is as the following:
-  - `before`: Data is in its raw form before any validation/sanitization and with no defaults applied. All provided argument and option values are strings (except for boolean options), missing arguments are null, rest arguments are an array of values, missing options are undefined, options provided without an argument value are null.
-  - `before-actions`: Data is at its final form with validation/sanitization done and defaults applied.
-  - `after`: Data is the same as in `before-actions` (since actions cannot mutate the parsed data).
+  - `validators:before`: Data is in its raw form before any validation/sanitization and with no defaults applied. All provided argument and option values are strings (except for boolean options), missing arguments are null, rest arguments are an array of values, missing options are undefined, options provided without an argument value are null, and multi options are an array of values.
+  - `validators:after`: Data is validated/sanitized but no defaults applied yet.
+  - `defaults:before`: Same as `validators:after`.
+  - `defaults:after`: Data is at its final form with validation/sanitization done and defaults applied.
+  - `actions:before`: Same as `defaults:after`.
+  - `actions:after`: Same as `actions:before` (since actions cannot mutate the parsed data).
 
 The following properties exist on all data objects provided with default events:
   - **args**: A key-value pair object containing the passed-in arguments (uses camel-cased argument names as keys).
@@ -262,6 +270,8 @@ The following properties exist on all data objects provided with default events:
   - **cmd**: The name of the invoked command.
 
 > **NOTE:** The data state is different when an [immediate option](#immediate-options) is parsed.
+
+> **NOTE:** Event handlers cannot mutate the parsed data.
 
 Registering event handlers for default events is [context-based](#context-and-chaining), meaning each call to the `on()` method registers the handler in the current context (command-specific, shared, global, or top-level).
 
@@ -354,18 +364,18 @@ The following demonstrates how various modules can be defined to perform specifi
 **Shared Module** (runs before all others)
 ```ts
 import app from 'argumental';
-// Type definitions for the shared data object
-import { SharedData } from './types';
+// Type definitions for the application data object
+import { AppData } from './types';
 
 app
 // Configure app
 .config({  })
 // Define shared action handler
 .shared
-.actionDestruct<SharedData>(({ data }) => {
+.action(() => {
 
   // Provide to all action handlers
-  data.prop = 'value';
+  app.data<AppData>().prop = 'value';
 
 });
 ```
@@ -377,10 +387,10 @@ import { SharedData } from './types';
 
 app
 .command('cmd1')
-.actionDestruct<SharedData>(({ data }) => {
+.action((args, opts) => {
 
   // Perform command-specific task
-  // data.prop is provided
+  // app.data().prop is provided
 
 });
 ```
