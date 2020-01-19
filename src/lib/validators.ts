@@ -87,7 +87,7 @@ export class BuiltInValidators {
 
   };
 
-  /** Checks if the value is a valid file path and the file exists and can be read (relative to current working directory). */
+  /** Checks if the value is a valid file path and the file exists and can be read (absolute or relative to current working directory). */
   FILE_PATH: Argumental.Validator = (value, name, arg) => {
 
     try {

@@ -4,7 +4,7 @@ export namespace Argumental {
   * Action handler with destructuring params.
   * @param params Action handler parameters object.
   */
-  export type ActionHandlerWithDestructuringParams<T=any> = (params: ActionHandlerParams<T>) => any|Promise<any>;
+  export type ActionHandlerWithDestructuringParams = (params: ActionHandlerParams) => any|Promise<any>;
 
   /**
   * Action handler.
@@ -12,11 +12,10 @@ export namespace Argumental {
   * @param opts Parsed options for the command.
   * @param cmd The name of the invoked command.
   * @param suspend Suspends next actions handlers (if any).
-  * @param data An object shared between action handlers to attach any data to.
   */
-  export type ActionHandler<T=any> = (args: List<any>, opts: List<any>, cmd: string, suspend: () => void, data: T) => any|Promise<any>;
+  export type ActionHandler= (args: List<any>, opts: List<any>, cmd: string, suspend: () => void) => any|Promise<any>;
 
-  export interface ActionHandlerParams<T=any> {
+  export interface ActionHandlerParams {
 
     /** Parsed arguments for the command. */
     args: List<any>;
@@ -26,8 +25,6 @@ export namespace Argumental {
     cmd: string;
     /** Suspends next actions handlers (if any). */
     suspend: () => void;
-    /** An object shared between action handlers to attach any data to. */
-    data: T;
 
   }
 
@@ -121,12 +118,18 @@ export namespace Argumental {
 
   export interface EventDeclarations {
 
-    /** Runs before validators and action handlers. */
-    before: EventHandler[];
+    /** Runs before validators, defaults, and action handlers. */
+    'validators:before': EventHandler[];
+    /** Runs after validators and before defaults and action handlers. */
+    'validators:after': EventHandler[];
+    /** Runs before defaults and action handlers. */
+    'defaults:before': EventHandler[];
+    /** Runs after defaults and before action handlers. */
+    'defaults:after': EventHandler[];
     /** Runs before action handlers. */
-    'before-actions': EventHandler[];
+    'actions:before': EventHandler[];
     /** Runs after action handlers. */
-    after: EventHandler[];
+    'actions:after': EventHandler[];
 
   }
 

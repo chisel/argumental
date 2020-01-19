@@ -643,7 +643,7 @@ describe('Parser', function() {
         ],
         actions: [],
         order: 1,
-        events: { before: [], 'before-actions': [], after: [] }
+        events: { 'validators:before': [], 'validators:after': [], 'defaults:before': [], 'defaults:after': [], 'actions:before': [], 'actions:after': [] }
       }
     };
 
@@ -711,7 +711,7 @@ describe('Parser', function() {
         actions: [],
         original: true,
         order: 0,
-        events: { before: [], 'before-actions': [], after: [] }
+        events: { 'validators:before': [], 'validators:after': [], 'defaults:before': [], 'defaults:after': [], 'actions:before': [], 'actions:after': [] }
       },
       'new script': {
         name: 'new script',
@@ -751,7 +751,7 @@ describe('Parser', function() {
         ],
         actions: [],
         order: 1,
-        events: { before: [], 'before-actions': [], after: [] }
+        events: { 'validators:before': [], 'validators:after': [], 'defaults:before': [], 'defaults:after': [], 'actions:before': [], 'actions:after': [] }
       }
     };
 

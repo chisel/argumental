@@ -917,7 +917,7 @@ describe('App', function() {
       actions: [(<any>app)._commands[''].actions[0], { callback: actionHandler, destructuringParams: false }],
       original: false,
       order: 0,
-      events: { before: [], 'before-actions': [], after: [] }
+      events: { 'validators:before': [], 'validators:after': [], 'defaults:before': [], 'defaults:after': [], 'actions:before': [], 'actions:after': [] }
     });
 
     expect(commands.test).to.deep.equal({
@@ -968,7 +968,7 @@ describe('App', function() {
       ],
       actions: [(<any>app)._commands['test'].actions[0], { callback: actionHandler, destructuringParams: true }],
       order: 1,
-      events: { before: [], 'before-actions': [], after: [] }
+      events: { 'validators:before': [], 'validators:after': [], 'defaults:before': [], 'defaults:after': [], 'actions:before': [], 'actions:after': [] }
     });
 
     expect(commands.test2).to.deep.equal({
@@ -1016,7 +1016,7 @@ describe('App', function() {
       ],
       actions: [(<any>app)._commands['test2'].actions[0], { callback: actionHandler, destructuringParams: false }],
       order: 2,
-      events: { before: [], 'before-actions': [], after: [] }
+      events: { 'validators:before': [], 'validators:after': [], 'defaults:before': [], 'defaults:after': [], 'actions:before': [], 'actions:after': [] }
     });
 
   });
@@ -1070,7 +1070,7 @@ describe('App', function() {
         actions: [(<any>app)._commands[''].actions[0]],
         original: false,
         order: 0,
-        events: { before: [], 'before-actions': [], after: [] }
+        events: { 'validators:before': [], 'validators:after': [], 'defaults:before': [], 'defaults:after': [], 'actions:before': [], 'actions:after': [] }
       }
     });
 
@@ -1162,9 +1162,9 @@ describe('App', function() {
     .config({ help: () => {} })
 
     .command('cmd1')
-    .on('before', beforeHandler)
-    .on('before-actions', beforeActionsHandler)
-    .on('after', afterHandler1)
+    .on('validators:before', beforeHandler)
+    .on('actions:before', beforeActionsHandler)
+    .on('actions:after', afterHandler1)
     .argument('<arg1>')
     .validate(app.NUMBER)
     .argument('[arg2]')
@@ -1180,14 +1180,14 @@ describe('App', function() {
     .immediate()
     .argument('<arg1>')
     .validate(app.NUMBER)
-    .on('before', beforeHandler)
-    .on('after', afterHandler1)
+    .on('validators:before', beforeHandler)
+    .on('actions:after', afterHandler1)
 
     .shared
-    .on('after', afterHandler2)
+    .on('actions:after', afterHandler2)
 
     .top
-    .on('after', afterHandler1);
+    .on('actions:after', afterHandler1);
 
     await app.parse(['node', 'test', 'cmd1']);
     expect(eventsFlow).to.deep.equal([]);
