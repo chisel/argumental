@@ -2,7 +2,7 @@
 
 Argumental provides a chainable API to define the whole application in one go (unless a [modular approach](../../../#modular-design) is desired where multiple chains are used).
 
-Once imported, the following methods are available on the app object and all methods return a reference to the parent object for chaining (except for [`parse()`](#parseargv), [`emit()`](#emitevent-data), and the [built-in validators](#built-in-validators)):
+Once imported, the following methods are available on the app object and all methods return a reference to the parent object for chaining (except for [`parse()`](#parseargv), [`emit()`](#emitevent-data), [`data()`](#data), and the [built-in validators](#built-in-validators)).
 
 ## Index
 
