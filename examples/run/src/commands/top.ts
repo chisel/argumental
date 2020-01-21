@@ -5,6 +5,8 @@ import { batchExists } from '../validators';
 app
 .top
 
+.description('executes a command batch and inserts all provided variables into the commands')
+
 .argument('<batch_name>')
 .description('name of a command batch to run')
 .validate(batchExists)
