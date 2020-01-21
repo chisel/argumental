@@ -149,6 +149,10 @@ If sharing definitions with all commands including top-level is desired, the [`g
 
 Arguments can be defined within any context using the [`argument()` API](./docs/API.md#argumentsyntax-description-validators-defaultvalue).
 
+An argument syntax must contain the following tokens:
+  - Argument name: Alphanumeric name which can also contain `-` and `_` in the middle.
+  - Requirement token: Wrap the argument name in `[]` for optional arguments and `<>` for required tokens.
+
 Example:
 ```js
 app
@@ -162,7 +166,7 @@ app
 
 ## Rest Arguments
 
-Rest arguments capture all values into one array and are useful for use cases where multiple values is expected and the number of provided values is unknown.
+Rest arguments capture all values into one array and are useful for use cases where multiple values are expected and the number of provided values is unknown.
 
 ```ts
 app
@@ -182,7 +186,7 @@ Things to keep in mind about rest arguments:
   - If rest argument is required, app will enforce users to provide at least one value for the argument.
   - Regular expression [validators](#validation) will run for each value provided for the rest argument, while function [validators](#validation) will run on the whole array of values.
   - Default value will be set instead of the whole array and not each value in the array.
-  - Options do not support rest arguments. If multiple values is expected for an option, use the [`multi` API](#multivalue) instead.
+  - Options do not support rest arguments. If multiple values are expected for an option, use the [`multi` API](#multivalue) instead.
   - When using the built-in validators, use the plural version for rest arguments (e.g. `app.STRINGS` instead of `app.STRING`).
 
 ## Defaults
@@ -215,8 +219,7 @@ The option syntax can contain the following tokens:
   - Name token: `--` followed by at least one alphanumeric character (name can contain `-` in the middle).
   - Argument syntax: An argument syntax following any previous tokens.
 
-Options without arguments are considered boolean and their value is either `true` or `false`.  
-Option with arguments may have the following possible values:
+Options without arguments are considered boolean and their value is either `true` or `false`, while option with arguments may have the following possible values:
   - `undefined`: If the option was not required and provided at all.
   - `null`: If the option was provided with no value for its argument.
   - An array: If the option has the [multi](#flags) flag. The array would contain a value for each option's occurrence.
@@ -395,7 +398,7 @@ The following properties exist on all data objects provided with default events:
 
 > **NOTE:** Event handlers cannot mutate the parsed data.
 
-Registering event handlers for default events is [context-based](#context-and-chaining), meaning each call to the `on()` method registers the handler in the current context (command-specific, shared, global, or top-level).
+Registering event handlers for default events is [context-based](#definition-context), meaning each call to the `on()` method registers the handler in the current context (command-specific, shared, global, or top-level).
 
 > **NOTE:** When the top-level command has no definitions (no arguments, options, or actions) and the [`topLevelPlainHelp` option](./docs/API.md#configoptions) is true (default state), no default events would be emitted when the top command is executed.
 
