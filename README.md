@@ -17,9 +17,14 @@ With Argumental you can:
   2. [Quick Start](#quick-start)
   3. [API](#api)
   4. [Definition Context](#definition-context)
-  5. [Validation](#validation)
-  6. [Rest Arguments](#rest-arguments)
-  7. [Immediate Options](#immediate-options)
+  5. [Arguments](#arguments)
+      - [Rest Arguments](#rest-arguments)
+      - [Defaults](#defaults)
+  6. [Options](#options)
+      - [Immediate Options](#immediate-options)
+      - [Flags](#flags)
+      - [Defaults](#defaults-1)
+  7. [Validation](#validation)
   8. [Events](#events)
       - [Default Events](#default-events)
       - [Custom Events](#custom-events)
@@ -140,6 +145,155 @@ If sharing definitions with all commands including top-level is desired, the [`g
 
 > **NOTE:** You cannot define aliases on global or shared context.
 
+# Arguments
+
+Arguments can be defined within any context using the [`argument()` API](./docs/API.md#argumentsyntax-description-validators-defaultvalue).
+
+Example:
+```js
+app
+.command('cmd1')
+// Required argument
+.argument('<arg1>')
+// Optional argument
+.argument('[arg2]')
+.parse(process.argv);
+```
+
+## Rest Arguments
+
+Rest arguments capture all values into one array and are useful for use cases where multiple values is expected and the number of provided values is unknown.
+
+```ts
+app
+// Required rest argument
+.argument('<...args>')
+.action(args => {
+
+  // Example: app arg1 arg2 arg3
+  console.log(args); // { args: ['arg1', 'arg2', 'arg3'] }
+
+})
+.parse(process.argv);
+```
+
+Things to keep in mind about rest arguments:
+  - No arguments can be defined after a rest argument.
+  - If rest argument is required, app will enforce users to provide at least one value for the argument.
+  - Regular expression [validators](#validation) will run for each value provided for the rest argument, while function [validators](#validation) will run on the whole array of values.
+  - Default value will be set instead of the whole array and not each value in the array.
+  - Options do not support rest arguments. If multiple values is expected for an option, use the [`multi` API](#multivalue) instead.
+  - When using the built-in validators, use the plural version for rest arguments (e.g. `app.STRINGS` instead of `app.STRING`).
+
+## Defaults
+
+A default value can be defined for an optional argument using the [`default()` API](./docs/API.md#defaultvalue) or by passing the value as the last parameter of [`argument()` API](./docs/API.md#argumentsyntax-description-validators-defaultvalue).
+
+Example:
+```js
+app
+.command('cmd1')
+.argument('[arg1]')
+.default('value')
+.action(args => {
+
+  // Example: cmd1 provided
+  console.log(args); // { arg1: 'provided' }
+  // Example: cmd1
+  console.log(args); // { arg1: 'value' }
+
+})
+.parse(process.argv);
+```
+
+# Options
+
+Options can be defined within any context using the [`option()` API](./docs/API.md#optionsyntax-description-required-validators-multi-defaultvalue-immediate).
+
+The option syntax can contain the following tokens:
+  - Shorthand token: `-` followed by one letter.
+  - Name token: `--` followed by at least one alphanumeric character (name can contain `-` in the middle).
+  - Argument syntax: An argument syntax following any previous tokens.
+
+Options without arguments are considered boolean and their value is either `true` or `false`.  
+Option with arguments may have the following possible values:
+  - `undefined`: If the option was not required and provided at all.
+  - `null`: If the option was provided with no value for its argument.
+  - An array: If the option has the [multi](#flags) flag. The array would contain a value for each option's occurrence.
+  - Anything else: If the option was provided with a value for its argument. This value is originally a string but can be mutated through [validators](#validators).
+
+Example:
+```js
+app
+.command('cmd1')
+// Define port option with shorthand p which takes a required argument
+.option('-p --port <port_number>')
+// Define boolean option
+.option('--detect-open-port')
+.actionDestruct(({ opts }) => {
+
+  // Example: cmd1 -p 4001 --detect-open-port
+  console.log(opts); // { p: '4001', port: '4001', detectOpenPort: true }
+
+})
+.parse(process.argv);
+```
+
+## Immediate Options
+
+Options can be defined with an immediate flag. This flag means when the option is provided and parsed, all syntax validation (except for unknown commands), all option and argument validators, and applying default values will be skipped and actions will be executed as soon as possible. This behavior is desired with options such as `--help` and `--version`.
+
+In this case, the data passed into action handlers will contain nothing but the immediate option's value.
+
+Example:
+```js
+app
+.argument('<arg1>')
+.option('-p --port <port_number>')
+.option('-i')
+.immediate()
+.action((args, opts) => {
+
+  // Example: app "arg1 value" -p 3001 -i
+  console.log(args); // {}
+  console.log(opts); // { i: true }
+
+})
+.parse(process.argv);
+```
+
+> **NOTE:** If an immediate option has the multi flag, only the first occurrence's value will be considered, meaning the value provided to the action handlers will never be an array.
+
+## Flags
+
+Option flags can be provided either as parameters of [`option()` API](./docs/API.md#optionsyntax-description-required-validators-multi-defaultvalue-immediate) or through dedicated API methods:
+  - **required** flag: Makes an option required.
+  - **immediate** flag: Makes an option [immediate](#immediate-options).
+  - **multi** flag: Makes an option repeatable.
+
+## Defaults
+
+A default value for optional options with an argument can be defined using the [`default()` API](./docs/API.md#defaultvalue) or by passing the value as the second last parameter of [`option()` API](./docs/API.md#optionsyntax-description-required-validators-multi-defaultvalue-immediate).
+
+Example:
+```js
+app
+.command('cmd1')
+.option('-o --option [arg]')
+.default('value')
+.actionDestruct(({ opts }) => {
+
+  // Example: cmd1
+  console.log(opts); // { o: 'value', option: 'value' }
+  // Example: cmd1 -o
+  console.log(opts); // { o: 'value', option: 'value' }
+  // Example: cmd1 -o provided
+  console.log(opts); // { o: 'provided', option: 'provided' }
+
+})
+.parse(process.argv);
+```
+
 # Validation
 
 Validators are functions that take a user-provided argument value and check it based on specific rules. If validation fails, validators must throw or return an error with a custom message to display to the user.
@@ -203,38 +357,6 @@ app
 ```
 
 > **NOTE:** Validators will be skipped when no value is provided for optional arguments or if defined on boolean options.
-
-# Rest Arguments
-
-Rest arguments capture all values into one array and are useful for use cases where multiple values is expected and the number of provided values is unknown.
-
-```ts
-app
-.argument('<...args>')
-.action(args => {
-
-  // Example: app arg1 arg2 arg3
-  console.log(args); // { args: ['arg1', 'arg2', 'arg3'] }
-
-})
-.parse(process.argv);
-```
-
-Things to keep in mind about rest arguments:
-  - No arguments can be defined after a rest argument.
-  - If rest argument is required, app will enforce users to provide at least one value for the argument.
-  - Regular expression [validators](#validation) will run for each value provided for the rest argument, while function [validators](#validation) will run on the whole array of values.
-  - Default value will be set instead of the whole array and not each value in the array.
-  - Options do not support rest arguments. If multiple values is expected for an option, use the [`multi` API](#multivalue) instead.
-  - When using the built-in validators, use the plural version for rest arguments (e.g. `app.STRINGS` instead of `app.STRING`).
-
-# Immediate Options
-
-Options can be defined with an immediate flag. This flag means when the option is provided and parsed, all syntax validation (except for unknown commands), all option and argument validators, and applying default values will be skipped and actions will be executed as soon as possible. This behavior is desired with options such as `--help` and `--version`.
-
-In this case, the data passed into action handlers will contain nothing but the immediate option's value.
-
-> **NOTE:** If an immediate option has the multi flag, only the first occurrence's value will be considered, meaning the value provided to the action handlers will never be an array.
 
 # Events
 
