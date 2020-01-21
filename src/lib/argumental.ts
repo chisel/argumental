@@ -239,9 +239,9 @@ export class ArgumentalApp extends BuiltInValidators {
     destructuringParams: boolean
   ): void {
 
-    // Check if no command is being declared and global flag is not set
-    if ( this._currentCommand === null && ! this._global )
-      throw new Error(`ARGUMENTAL_ERROR: Cannot add action handler because no command is being defined and global definition is disabled!`);
+    // Check if no command is being declared and global and shared flags are not set
+    if ( this._currentCommand === null && ! this._global && ! this._shared )
+      throw new Error(`ARGUMENTAL_ERROR: Cannot add action handler because no command is being defined and global and shared definitions are disabled!`);
 
     // Add the action handler globally and append to all commands (including top-level)
     if ( this._global ) {
@@ -276,8 +276,8 @@ export class ArgumentalApp extends BuiltInValidators {
     }
 
     // If top-level, set original to false
-    if ( this._currentCommand === '' && ! this._global )
-      this._commands[this._currentCommand].original = false;
+    if ( this._global || (! this._shared && this._currentCommand === '') )
+      this._commands[''].original = false;
 
   }
 
@@ -986,8 +986,8 @@ export class ArgumentalApp extends BuiltInValidators {
     this._conflicts.push(name.trim());
 
     // If top-level, set original to false
-    if ( this._currentCommand === '' && ! this._global )
-      this._commands[this._currentCommand].original = false;
+    if ( this._global || (! this._shared && this._currentCommand === '') )
+      this._commands[''].original = false;
 
     return this;
 
@@ -1079,8 +1079,8 @@ export class ArgumentalApp extends BuiltInValidators {
     this._currentComponent = 'arguments';
 
     // If top-level, set original to false
-    if ( this._currentCommand === '' && ! this._global )
-      this._commands[this._currentCommand].original = false;
+    if ( this._global || (! this._shared && this._currentCommand === '') )
+      this._commands[''].original = false;
 
     return this;
 
@@ -1152,8 +1152,8 @@ export class ArgumentalApp extends BuiltInValidators {
     this._currentComponent = 'options';
 
     // If top-level, set original to false
-    if ( this._currentCommand === '' && ! this._global )
-      this._commands[this._currentCommand].original = false;
+    if ( this._global || (! this._shared && this._currentCommand === '') )
+      this._commands[''].original = false;
 
     return this;
 

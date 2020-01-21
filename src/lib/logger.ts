@@ -227,7 +227,7 @@ export class Logger {
   */
   public help(definitions: Argumental.List<Argumental.CommandDeclaration>, cmd: string): void {
 
-    // If custom helpe renderer provided
+    // If custom help renderer provided
     if ( this._customHelp ) return this._customHelp(_.cloneDeep(definitions), cmd);
 
     // Set colors
@@ -238,7 +238,7 @@ export class Logger {
     let color = new chalk.Instance(chalkOptions);
     // Determine top-level usage signature
     let topLevelOnly = _.keys(definitions).length === 1;
-    let usageSection: string, commandsSection: string, argumentsSection: string, optionsSection: string;
+    let usageSection: string, usageDescription: string, commandsSection: string, argumentsSection: string, optionsSection: string;
 
     // Render usage section
     usageSection = color.white.bold('USAGE: ');
@@ -285,10 +285,37 @@ export class Logger {
 
     }
 
+    // Render top-level description
+    if ( cmd === '' && ! definitions[''].original && definitions[''].description ) {
+
+      usageDescription = definitions[''].description;
+
+    }
+    else if ( cmd !== '' && definitions[cmd].description ) {
+
+      usageDescription = definitions[cmd].description;
+
+    }
+
     // Render commands section
-    if ( cmd === '' && _.keys(definitions).length > 1 ) {
+    if ( cmd === '' && ! topLevelOnly ) {
 
       commandsSection = color.white.bold('COMMANDS:\n\n');
+
+      // Display command-specific usage (if usage was not generic)
+      if ( ! definitions[''].original ) {
+
+        const segments: string[] = [color.white.bold('USAGE:')];
+
+        if ( this._appName ) segments.push(this._appName);
+        segments.push(color.blueBright('<command>'));
+        if ( this._doArgumentsExist(definitions) ) segments.push(color.magenta(`<arguments>`));
+
+        segments.push(color.yellow.italic('[options]'));
+
+        commandsSection += `${this._pad(2)}${segments.join(' ')}\n\n`;
+
+      }
 
       const longest = this._getLongest(_.keys(definitions).map(name => [name, ...definitions[name].aliases].join('|')));
 
@@ -364,6 +391,7 @@ export class Logger {
     console.log('\n');
 
     console.log(`${this._pad()}${usageSection}\n`);
+    if ( usageDescription ) console.log(`${this._pad()}${usageDescription}\n`);
     if ( commandsSection ) console.log(`${this._pad()}${commandsSection}`);
     if ( argumentsSection ) console.log(`${this._pad()}${argumentsSection}`);
     console.log(`${this._pad()}${optionsSection}`);
