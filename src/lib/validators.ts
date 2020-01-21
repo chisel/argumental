@@ -4,10 +4,10 @@ import { Argumental } from '../types';
 
 export class BuiltInValidators {
 
-  /** Checks if the value is string. */
+  /** Checks if the value is string (cannot be converted into a number or boolean). */
   STRING: Argumental.Validator = (value, name, arg) => {
 
-    if ( typeof value !== 'string' )
+    if ( typeof value !== 'string' || ['true', 'false'].includes(value.trim().toLowerCase()) || value.trim().match(/^\d+$/) )
       throw new Error(`Invalid value for ${arg ? 'argument' : 'option'} ${name}!\n   Value must be string.`);
 
   };
@@ -32,7 +32,7 @@ export class BuiltInValidators {
 
   };
 
-  /** Checks if all values of the array are strings. */
+  /** Checks if all values of the array are strings (cannot be converted into numbers or booleans). */
   STRINGS: Argumental.Validator = (value, name, arg) => {
 
     const errorMessage = `Invalid value for ${arg ? 'argument' : 'option'} ${name}!\n   Value must be multiple strings.`;
@@ -42,7 +42,7 @@ export class BuiltInValidators {
 
     for ( const v of value ) {
 
-      if ( typeof v !== 'string' )
+      if ( typeof v !== 'string' || ['true', 'false'].includes(v.trim().toLowerCase()) || v.trim().match(/^\d+$/) )
         throw new Error(errorMessage);
 
     }
