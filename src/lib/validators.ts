@@ -32,7 +32,9 @@ export class BuiltInValidators {
 
   };
 
-  /** Checks if all values of the array are strings (cannot be converted into numbers or booleans). */
+  /** Checks if all values of the array are strings (cannot be converted into numbers or booleans).
+  * <strong>Should be used on rest arguments only</strong>.
+  */
   STRINGS: Argumental.Validator = (value, name, arg) => {
 
     const errorMessage = `Invalid value for ${arg ? 'argument' : 'option'} ${name}!\n   Value must be multiple strings.`;
@@ -49,7 +51,9 @@ export class BuiltInValidators {
 
   };
 
-  /** Checks if all values of the array are numbers or can be converted to number. Casts all values to number if passed. */
+  /** Checks if all values of the array are numbers or can be converted to number. Casts all values to number if passed.
+  * <strong>Should be used on rest arguments only</strong>.
+  */
   NUMBERS: Argumental.Validator = (value, name, arg) => {
 
     const errorMessage = `Invalid value for ${arg ? 'argument' : 'option'} ${name}!\n   Value must be multiple numbers.`;
@@ -68,7 +72,9 @@ export class BuiltInValidators {
 
   };
 
-  /** Checks if all values of the array are booleans or can be converted to booleans (accepts 'true' and 'false' for conversion). Casts all values to boolean if passed. */
+  /** Checks if all values of the array are booleans or can be converted to booleans (accepts 'true' and 'false' for conversion). Casts all values to boolean if passed.
+  * <strong>Should be used on rest arguments only</strong>.
+  */
   BOOLEANS: Argumental.Validator = (value, name, arg) => {
 
     const errorMessage = `Invalid value for ${arg ? 'argument' : 'option'} ${name}!\n   Value must be multiple booleans.`;

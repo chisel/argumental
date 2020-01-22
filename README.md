@@ -359,7 +359,11 @@ app
 .parse(process.argv);
 ```
 
-> **NOTE:** Validators will be skipped when no value is provided for optional arguments or if defined on boolean options.
+**Additional Notes:**
+  - Validators will be skipped when no value is provided for optional arguments or if defined on boolean options.
+  - For rest arguments, validators would run on the whole array of values and not for each.
+  - For multi/repeatable options, validators would run for each value and not the whole array.
+  - Plural built-in validators (e.g. [`STRINGS`](./docs/API.md#STRINGS), [`NUMBERS`](./docs/API.md#NUMBERS), [`BOOLEANS`](./docs/API.md#BOOLEANS)) should be only used for rest arguments.
 
 # Events
 
