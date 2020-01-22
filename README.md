@@ -626,6 +626,8 @@ const app = new ArgumentalApp();
 
 Several examples with different project setup and API usage are included in the [examples directory](./examples). These examples demonstrate Argumental's full potential in creating flexible and modular CLI apps while writing less code.
 
+Another example is [Secret Vault](https://github.com/ramtinsoltani/secretvault). A credentials manager on the terminal created using Argumental.
+
 # Tests
 
 Run the unit tests built with Mocha and Chai:
