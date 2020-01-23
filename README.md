@@ -42,7 +42,7 @@ With Argumental you can:
 npm install argumental
 ```
 
-> **NOTE:** Supports Node.js 6 or higher (ES2016).
+> **NOTE:** Supports Node.js 8.6.0+.
 
 # Quick Start
 
