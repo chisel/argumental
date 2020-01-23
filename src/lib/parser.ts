@@ -483,7 +483,7 @@ export class Parser {
 
     }
 
-    // Remove wrapping "" for string values
+    // Remove wrapping "" and '' for string values
     for ( const name in parsedArgs.opts ) {
 
       // If value is array
@@ -494,7 +494,7 @@ export class Parser {
           // If value is not string or was not wrapped
           if ( typeof value !== 'string' || ! value.match(/^".*"$/i) ) return value;
 
-          return value.replace(/^"/, '').replace(/"$/, '');
+          return value.replace(/^"/, '').replace(/"$/, '').replace(/^'/, '').replace(/'$/, '');
 
         });
 
