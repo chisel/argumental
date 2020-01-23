@@ -491,10 +491,13 @@ export class Parser {
 
         (<string[]>parsedArgs.opts[name]) = (<string[]>parsedArgs.opts[name]).map(value => {
 
-          // If value is not string or was not wrapped
-          if ( typeof value !== 'string' || ! value.match(/^".*"$/i) ) return value;
+          // If value is not string
+          if ( typeof value !== 'string' ) return value;
 
-          return value.replace(/^"/, '').replace(/"$/, '').replace(/^'/, '').replace(/'$/, '');
+          if ( value.match(/^".*"$/i) ) return value.replace(/^"/, '').replace(/"$/, '');
+          if ( value.match(/^'.*'$/i) ) return value.replace(/^'/, '').replace(/'$/, '');
+
+          return value;
 
         });
 
