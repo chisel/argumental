@@ -1,6 +1,6 @@
 {
   "name": "argumental",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Framework for building CLI apps with Node.js",
   "main": "dist/index.js",
   "scripts": {
