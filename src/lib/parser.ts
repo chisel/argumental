@@ -483,7 +483,7 @@ export class Parser {
 
     }
 
-    // Remove wrapping "" and '' for string values
+    // Remove wrapping "" and '' for string values (options)
     for ( const name in parsedArgs.opts ) {
 
       // If value is array
@@ -494,8 +494,8 @@ export class Parser {
           // If value is not string
           if ( typeof value !== 'string' ) return value;
 
-          if ( value.match(/^".*"$/i) ) return value.replace(/^"/, '').replace(/"$/, '');
-          if ( value.match(/^'.*'$/i) ) return value.replace(/^'/, '').replace(/'$/, '');
+          if ( value.match(/^".*"$/) ) return value.replace(/^"/, '').replace(/"$/, '');
+          if ( value.match(/^'.*'$/) ) return value.replace(/^'/, '').replace(/'$/, '');
 
           return value;
 
@@ -505,9 +505,47 @@ export class Parser {
       else {
 
         // If value is not string or was not wrapped
-        if ( typeof parsedArgs.opts[name] !== 'string' || ! (<string>parsedArgs.opts[name]).match(/^".*"$/i) ) continue;
+        if ( typeof parsedArgs.opts[name] !== 'string' ) continue;
 
-        parsedArgs.opts[name] = (<string>parsedArgs.opts[name]).replace(/^"/, '').replace(/"$/, '');
+        if ( (<string>parsedArgs.opts[name]).match(/^".*"$/i) )
+          parsedArgs.opts[name] = (<string>parsedArgs.opts[name]).replace(/^"/, '').replace(/"$/, '');
+
+        if ( (<string>parsedArgs.opts[name]).match(/^'.*'$/i) )
+          parsedArgs.opts[name] = (<string>parsedArgs.opts[name]).replace(/^'/, '').replace(/'$/, '');
+
+      }
+
+    }
+
+    // Remove wrapping "" and '' for string values (arguments)
+    for ( const name in parsedArgs.args ) {
+
+      // If value is array
+      if ( this._isArray(parsedArgs.args[name]) ) {
+
+        (<string[]>parsedArgs.args[name]) = (<string[]>parsedArgs.args[name]).map(value => {
+
+          // If value is not string
+          if ( typeof value !== 'string' ) return value;
+
+          if ( value.match(/^".*"$/) ) return value.replace(/^"/, '').replace(/"$/, '');
+          if ( value.match(/^'.*'$/) ) return value.replace(/^'/, '').replace(/'$/, '');
+
+          return value;
+
+        });
+
+      }
+      else {
+
+        // If value is not string or was not wrapped
+        if ( typeof parsedArgs.args[name] !== 'string' ) continue;
+
+        if ( (<string>parsedArgs.args[name]).match(/^".*"$/i) )
+          parsedArgs.args[name] = (<string>parsedArgs.args[name]).replace(/^"/, '').replace(/"$/, '');
+
+        if ( (<string>parsedArgs.args[name]).match(/^'.*'$/i) )
+          parsedArgs.args[name] = (<string>parsedArgs.args[name]).replace(/^'/, '').replace(/'$/, '');
 
       }
 

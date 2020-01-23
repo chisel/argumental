@@ -772,4 +772,90 @@ describe('Parser', function() {
 
   });
 
+  it('should remove wrapped string values', function() {
+
+    const commands: Argumental.List<Argumental.CommandDeclaration> = {
+      'cmd1': {
+        name: 'cmd1',
+        description: null,
+        aliases: [],
+        arguments: [
+          {
+            name: 'arg1',
+            apiName: 'arg1',
+            required: true,
+            default: undefined,
+            validators: [],
+            description: null,
+            rest: false
+          },
+          {
+            name: 'arg2',
+            apiName: 'arg2',
+            required: true,
+            default: undefined,
+            validators: [],
+            description: null,
+            rest: false
+          },
+          {
+            name: 'arg3',
+            apiName: 'arg3',
+            required: true,
+            default: undefined,
+            validators: [],
+            description: null,
+            rest: true
+          }
+        ],
+        options: [
+          {
+            shortName: 'p',
+            longName: null,
+            apiName: null,
+            required: false,
+            argument: {
+              name: 'value',
+              apiName: 'value',
+              required: true,
+              default: undefined,
+              validators: []
+            },
+            description: null,
+            multi: false,
+            immediate: false
+          },
+          {
+            shortName: 'o',
+            longName: null,
+            apiName: null,
+            required: false,
+            argument: {
+              name: 'value',
+              apiName: 'value',
+              required: true,
+              default: undefined,
+              validators: []
+            },
+            description: null,
+            multi: true,
+            immediate: false
+          }
+        ],
+        actions: [],
+        order: 1,
+        events: { 'validators:before': [], 'validators:after': [], 'defaults:before': [], 'defaults:after': [], 'actions:before': [], 'actions:after': [] }
+      }
+    };
+
+    let args = parser.parseCliArguments(['cmd1', '-p', '"string"', '-o', "'string'", '-o', '"string"', '"string"', "'string'", '"string"', "'string'"], commands);
+
+    expect(args).to.deep.equal({
+      cmd: 'cmd1',
+      args: { arg1: 'string', arg2: 'string', arg3: ['string', 'string'] },
+      opts: { p: 'string', o: ['string', 'string'] }
+    });
+
+  });
+
 });
