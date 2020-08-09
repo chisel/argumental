@@ -106,7 +106,7 @@ export class Logger {
     }
     if ( option.argument ) {
 
-      syntax.arg = `${option.required ? '<name>' : '[name]'}`.replace('name', option.argument.name);
+      syntax.arg = `${option.argument.required ? '<name>' : '[name]'}`.replace('name', option.argument.name);
       segments.push(syntax.arg);
 
     }
