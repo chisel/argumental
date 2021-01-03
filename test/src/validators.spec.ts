@@ -31,6 +31,7 @@ describe('Validators', function() {
 
     expect(validators.NUMBER(1000, 'correct value', false, 'command', null)).to.equal(1000);
     expect(validators.NUMBER('2000', 'castable string', true, 'command', null)).to.equal(2000);
+    expect(validators.NUMBER('14.99', 'castable string', true, 'command', null)).to.equal(14.99);
 
     let validationError: Error = null;
 
@@ -113,7 +114,7 @@ describe('Validators', function() {
 
   it('should validate array of numbers', function() {
 
-    expect(validators.NUMBERS(['23',1], 'correct value', true, 'command', null)).to.deep.equal([23, 1]);
+    expect(validators.NUMBERS(['23',1, 14.99], 'correct value', true, 'command', null)).to.deep.equal([23, 1, 14.99]);
 
     let validationError: Error = null;
 

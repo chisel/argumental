@@ -7,7 +7,7 @@ export class BuiltInValidators {
   /** Checks if the value is string (cannot be converted into a number or boolean). */
   STRING: Argumental.Validator = (value, name, arg) => {
 
-    if ( typeof value !== 'string' || ['true', 'false'].includes(value.trim().toLowerCase()) || value.trim().match(/^\d+$/) )
+    if ( typeof value !== 'string' || ['true', 'false'].includes(value.trim().toLowerCase()) || value.trim().match(/^\d+(\.\d+)?$/) )
       throw new Error(`Invalid value for ${arg ? 'argument' : 'option'} ${name}!\n   Value must be string.`);
 
   };
@@ -15,7 +15,7 @@ export class BuiltInValidators {
   /** Checks if the value is number or can be converted to number. Casts the value to number if passed. */
   NUMBER: Argumental.Validator = (value, name, arg) => {
 
-    if ( (typeof value !== 'number' && typeof value !== 'string') || (typeof value === 'string' && ! value.trim().match(/^\d+$/)) )
+    if ( (typeof value !== 'number' && typeof value !== 'string') || (typeof value === 'string' && ! value.trim().match(/^\d+(\.\d+)?$/)) )
       throw new Error(`Invalid value for ${arg ? 'argument' : 'option'} ${name}!\n   Value must be a number.`);
 
     return typeof value === 'string' ? +(<string>value).trim() : value;
@@ -44,7 +44,7 @@ export class BuiltInValidators {
 
     for ( const v of value ) {
 
-      if ( typeof v !== 'string' || ['true', 'false'].includes(v.trim().toLowerCase()) || v.trim().match(/^\d+$/) )
+      if ( typeof v !== 'string' || ['true', 'false'].includes(v.trim().toLowerCase()) || v.trim().match(/^\d+(\.\d+)?$/) )
         throw new Error(errorMessage);
 
     }
@@ -63,7 +63,7 @@ export class BuiltInValidators {
 
     for ( const v of value ) {
 
-      if ( (typeof v !== 'number' && typeof v !== 'string') || (typeof v === 'string' && ! v.trim().match(/^\d+$/)) )
+      if ( (typeof v !== 'number' && typeof v !== 'string') || (typeof v === 'string' && ! v.trim().match(/^\d+(\.\d+)?$/)) )
         throw new Error(errorMessage);
 
     }
