@@ -1273,6 +1273,16 @@ export class ArgumentalApp extends BuiltInValidators {
   }
 
   /**
+  * Displays an error message in the console.
+  @param message An error message or object.
+  */
+  public error(message: string|Error): void {
+
+    this._log.error(message);
+
+  }
+
+  /**
   * Parses the process arguments (argv) and runs the app.
   * @param argv Process arguments to parse.
   */

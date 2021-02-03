@@ -30,6 +30,7 @@ Once imported, the following methods are available on the app object and all met
   - [config()](#configoptions)
   - [on()](#onevent-handler)
   - [emit()](#emitevent-data)
+  - [error()](#errormessage)
   - [STRING](#string)
   - [NUMBER](#number)
   - [BOOLEAN](#boolean)
@@ -183,6 +184,11 @@ Event handlers can return a promise for async execution.
 Emits a [custom event](../../../#custom-events).
   - **event**: The custom event name.
   - **data**: The event data to provide to all handlers.
+
+### error(___message___)
+
+Displays an error message in the console.
+  - **message**: An error message or object.
 
 ## Built-in Validators
 
