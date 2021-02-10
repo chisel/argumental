@@ -6,7 +6,7 @@ describe('App', function() {
 
   it('should define app correctly', function() {
 
-    const app = new ArgumentalApp();
+    const app = new ArgumentalApp(false);
 
     app
     .version('1.0.0')
@@ -155,7 +155,7 @@ describe('App', function() {
 
     try {
 
-      new ArgumentalApp()
+      new ArgumentalApp(false)
       .command('test')
       .command('test');
 
@@ -171,7 +171,7 @@ describe('App', function() {
 
     try {
 
-      new ArgumentalApp()
+      new ArgumentalApp(false)
       .command('test')
       .argument('<arg1>')
       .argument('<arg1>');
@@ -188,7 +188,7 @@ describe('App', function() {
 
     try {
 
-      new ArgumentalApp()
+      new ArgumentalApp(false)
       .argument('<arg1>')
       .argument('<arg1>');
 
@@ -204,7 +204,7 @@ describe('App', function() {
 
     try {
 
-      new ArgumentalApp()
+      new ArgumentalApp(false)
       .shared
       .argument('<arg1>')
       .command('test')
@@ -222,7 +222,7 @@ describe('App', function() {
 
     try {
 
-      new ArgumentalApp()
+      new ArgumentalApp(false)
       .option('-l')
       .option('-l');
 
@@ -238,7 +238,7 @@ describe('App', function() {
 
     try {
 
-      new ArgumentalApp()
+      new ArgumentalApp(false)
       .shared
       .option('-l')
       .command('test')
@@ -256,7 +256,7 @@ describe('App', function() {
 
     try {
 
-      new ArgumentalApp()
+      new ArgumentalApp(false)
       .shared
       .alias('s')
 
@@ -272,7 +272,7 @@ describe('App', function() {
 
     try {
 
-      new ArgumentalApp()
+      new ArgumentalApp(false)
       .command('blah')
       .alias('b')
       .command('b')
@@ -289,7 +289,7 @@ describe('App', function() {
 
     try {
 
-      new ArgumentalApp()
+      new ArgumentalApp(false)
       .command('blah')
       .alias('bla')
       .alias('blah')
@@ -306,7 +306,7 @@ describe('App', function() {
 
     try {
 
-      new ArgumentalApp()
+      new ArgumentalApp(false)
       .argument('[arg1]')
       .argument('<...args>')
       .argument('<arg2>')
@@ -323,7 +323,7 @@ describe('App', function() {
 
     try {
 
-      new ArgumentalApp()
+      new ArgumentalApp(false)
       .shared
       .argument('<...args>')
       .command('blah')
@@ -343,7 +343,7 @@ describe('App', function() {
 
   it('should report parsing errors correctly', async function() {
 
-    let app = new ArgumentalApp();
+    let app = new ArgumentalApp(false);
 
     app
     .command('test')
@@ -408,7 +408,7 @@ describe('App', function() {
 
     expect(errors).to.be.empty;
 
-    app = new ArgumentalApp();
+    app = new ArgumentalApp(false);
 
     app
     .command('test')
@@ -472,7 +472,7 @@ describe('App', function() {
 
   it('should run actions correctly', async function() {
 
-    const app = new ArgumentalApp();
+    const app = new ArgumentalApp(false);
     const flags: string[] = [];
 
     await app
@@ -499,7 +499,7 @@ describe('App', function() {
 
   it('should run argument validators correctly', async function() {
 
-    let app = new ArgumentalApp();
+    let app = new ArgumentalApp(false);
     const converted: any[] = [];
 
     // Capture error messages
@@ -575,7 +575,7 @@ describe('App', function() {
     expect(converted).to.be.empty;
 
     let finalArgs: Argumental.List<any>;
-    app = new ArgumentalApp();
+    app = new ArgumentalApp(false);
 
     // Capture error messages
     errors = [];
@@ -607,7 +607,7 @@ describe('App', function() {
       args: [2, 3]
     });
 
-    app = new ArgumentalApp();
+    app = new ArgumentalApp(false);
 
     // Capture error messages
     errors = [];
@@ -651,7 +651,7 @@ describe('App', function() {
 
   it('should run option validators correctly', async function() {
 
-    const app = new ArgumentalApp();
+    const app = new ArgumentalApp(false);
     const values: any[] = [];
 
     // Capture error messages
@@ -720,7 +720,7 @@ describe('App', function() {
 
   it('should apply defaults correctly', async function() {
 
-    const app = new ArgumentalApp();
+    const app = new ArgumentalApp(false);
     let _args: any, _opts: any;
 
     await app
@@ -762,7 +762,7 @@ describe('App', function() {
 
   it('should define top-level properties correctly', async function() {
 
-    const app = new ArgumentalApp();
+    const app = new ArgumentalApp(false);
     const flags: string[] = [];
 
     // Capture error messages
@@ -834,7 +834,7 @@ describe('App', function() {
 
   it('should define app correctly using helper functions', async function() {
 
-    const app = new ArgumentalApp();
+    const app = new ArgumentalApp(false);
     const actionHandler = () => { };
     const sanitizer = value => value.toLowerCase();
     const validator = /ts|js/;
@@ -1023,7 +1023,7 @@ describe('App', function() {
 
   it('should set config correctly', async function() {
 
-    const app = new ArgumentalApp();
+    const app = new ArgumentalApp(false);
     let defs: Argumental.List<Argumental.CommandDeclaration>;
     let currentCommand: string;
 
@@ -1078,7 +1078,7 @@ describe('App', function() {
 
   it('should parse immediate options correctly', async function() {
 
-    const app = new ArgumentalApp();
+    const app = new ArgumentalApp(false);
     let parsed: Argumental.ParsedArguments = null;
 
     // Capture error messages
@@ -1122,7 +1122,7 @@ describe('App', function() {
 
   it('should register event handlers for default events and execute them correctly', async function() {
 
-    let app = new ArgumentalApp();
+    let app = new ArgumentalApp(false);
     let eventsFlow: string[] = [];
     let expectedBeforeData: any = {}, expectedBeforeActionsData: any = {}, expectedAfterData: any = {};
     const beforeHandler = (data: any) => {
@@ -1242,7 +1242,7 @@ describe('App', function() {
 
   it('should define on global and shared context correctly', async function() {
 
-    const app = new ArgumentalApp();
+    const app = new ArgumentalApp(false);
 
     app
     .command('cmd1')
@@ -1355,7 +1355,7 @@ describe('App', function() {
 
     try {
 
-      new ArgumentalApp()
+      new ArgumentalApp(false)
       .shared
       .argument('<arg>')
       .global
@@ -1374,7 +1374,7 @@ describe('App', function() {
 
     try {
 
-      new ArgumentalApp()
+      new ArgumentalApp(false)
       .shared
       .option('--option1')
       .global
@@ -1393,7 +1393,7 @@ describe('App', function() {
 
     try {
 
-      new ArgumentalApp()
+      new ArgumentalApp(false)
       .argument('<arg>')
       .shared
       .argument('<arg>');
@@ -1409,7 +1409,7 @@ describe('App', function() {
 
     try {
 
-      new ArgumentalApp()
+      new ArgumentalApp(false)
       .command('cmd')
       .argument('<arg>')
       .shared
@@ -1428,7 +1428,7 @@ describe('App', function() {
 
     try {
 
-      new ArgumentalApp()
+      new ArgumentalApp(false)
       .command('cmd')
       .argument('<arg>')
       .global
@@ -1447,7 +1447,7 @@ describe('App', function() {
 
     try {
 
-      new ArgumentalApp()
+      new ArgumentalApp(false)
       .command('cmd')
       .argument('<...arg>')
       .global
@@ -1466,7 +1466,7 @@ describe('App', function() {
 
     try {
 
-      new ArgumentalApp()
+      new ArgumentalApp(false)
       .shared
       .argument('<arg>')
       .command('cmd')

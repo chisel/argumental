@@ -7,9 +7,11 @@ import { Argumental } from '../types';
 
 export class ArgumentalApp extends BuiltInValidators {
 
-  constructor() {
+  constructor(exitOnError?: boolean) {
 
     super();
+
+    if ( exitOnError !== undefined ) this._exitOnError = !! exitOnError;
 
     // Define --help top-level
     this._commands[''].options.push(this._parser.parseOption('--help', 'displays application help', false, null, false, undefined, true));
@@ -113,6 +115,8 @@ export class ArgumentalApp extends BuiltInValidators {
   private _events: Map<string, Argumental.EventHandler[]> = new Map();
   /** Shared data object throughout the application. */
   private _data: any = {};
+  /** Whether to end process on error or not. */
+  private _exitOnError: boolean = true;
 
   /**
   * Attaches an array of validators to the given component (argument or option's argument).
@@ -404,6 +408,15 @@ export class ArgumentalApp extends BuiltInValidators {
       await handler(data);
 
     }
+
+  }
+
+  /** Logs error and exits the process with code 1. */
+  private _exitWithError(error: string|Error): void {
+
+    this._log.error(error);
+
+    if ( this._exitOnError ) process.exit(1);
 
   }
 
@@ -1305,7 +1318,7 @@ export class ArgumentalApp extends BuiltInValidators {
     const parsed = this._parser.parseCliArguments(argv.slice(2), this._commands);
 
     // If parsing error
-    if ( parsed instanceof Error ) return this._log.error(parsed);
+    if ( parsed instanceof Error ) return this._exitWithError(parsed);
 
     const command = this._commands[parsed.cmd];
     let immediateOption: Argumental.OptionDeclaration = null;
@@ -1354,7 +1367,7 @@ export class ArgumentalApp extends BuiltInValidators {
       for ( const argument of command.arguments ) {
 
         if ( argument.required && parsed.args[argument.apiName] === null )
-          return this._log.error(`Missing required argument <${argument.rest ? '...' : ''}${argument.name}>!`);
+          return this._exitWithError(`Missing required argument <${argument.rest ? '...' : ''}${argument.name}>!`);
 
       }
 
@@ -1371,11 +1384,11 @@ export class ArgumentalApp extends BuiltInValidators {
 
       // Missing required option
       if ( option.required && ((! option.argument && value === false) || (option.argument && value === undefined)) )
-        return this._log.error(`Missing required option ${logName}!`);
+        return this._exitWithError(`Missing required option ${logName}!`);
 
       // Option is not multi but occurs multiple times
       if ( ! option.multi && value && typeof value === 'object' && value.constructor === Array )
-        return this._log.error(`Option ${logName} cannot be provided more than once!`);
+        return this._exitWithError(`Option ${logName} cannot be provided more than once!`);
 
       // Missing required argument of option
       if ( option.argument && option.argument.required ) {
@@ -1385,14 +1398,14 @@ export class ArgumentalApp extends BuiltInValidators {
 
           for ( const v of value ) {
 
-            if ( v === null ) return this._log.error(`Missing required value for option ${logName}!`);
+            if ( v === null ) return this._exitWithError(`Missing required value for option ${logName}!`);
 
           }
 
         }
         else if ( value === null ) {
 
-          return this._log.error(`Missing required value for option ${logName}!`);
+          return this._exitWithError(`Missing required value for option ${logName}!`);
 
         }
 
@@ -1423,7 +1436,7 @@ export class ArgumentalApp extends BuiltInValidators {
               for ( const value of parsed.args[argument.apiName] ) {
 
                 if ( typeof value !== 'string' || ! value.match(validator) )
-                  return this._log.error(`Invalid value for argument ${argument.name}!`);
+                  return this._exitWithError(`Invalid value for argument ${argument.name}!`);
 
               }
 
@@ -1431,7 +1444,7 @@ export class ArgumentalApp extends BuiltInValidators {
             else {
 
               if ( typeof parsed.args[argument.apiName] !== 'string' || ! (<string>parsed.args[argument.apiName]).match(validator) )
-                return this._log.error(`Invalid value for argument ${argument.name}!`);
+                return this._exitWithError(`Invalid value for argument ${argument.name}!`);
 
             }
 
@@ -1480,7 +1493,7 @@ export class ArgumentalApp extends BuiltInValidators {
           }
           catch (error) {
 
-            return this._log.error(error.message);
+            return this._exitWithError(error.message);
 
           }
 
@@ -1532,7 +1545,7 @@ export class ArgumentalApp extends BuiltInValidators {
           if ( validator instanceof RegExp ) {
 
             if ( typeof value !== 'string' || ! value.match(validator) )
-              return this._log.error(`Invalid value for option ${option.longName || option.shortName}!`);
+              return this._exitWithError(`Invalid value for option ${option.longName || option.shortName}!`);
 
             continue;
 
@@ -1584,7 +1597,7 @@ export class ArgumentalApp extends BuiltInValidators {
           }
           catch (error) {
 
-            return this._log.error(error.message);
+            return this._exitWithError(error.message);
 
           }
 
